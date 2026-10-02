@@ -20,7 +20,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onDelete,
   onAiAnalyze,
 }) => {
-  const { overallScore, ratingGrade, scores } = product.evaluation;
+  const { overallScore, ratingGrade, scores, status } = product.evaluation;
   const gradeColor = getGradeColor(ratingGrade);
   const confidence = product.evaluation.confidence ?? buildEvaluationConfidence(product);
 
@@ -44,9 +44,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
 
         <div className="shrink-0 text-right">
-          <div className={`font-mono text-lg font-bold ${gradeColor.text}`}>
-            {overallScore}
-          </div>
+          {status === 'insufficient' ? (
+            <div className="text-sm font-semibold text-amber-700">Chưa đủ dữ liệu</div>
+          ) : (
+            <div className={`font-mono text-lg font-bold ${gradeColor.text}`}>{overallScore}</div>
+          )}
           <div className="text-xs text-stone-500">tin cậy {confidence.score}%</div>
         </div>
       </div>
