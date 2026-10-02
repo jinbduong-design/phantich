@@ -1,7 +1,7 @@
 import React from 'react';
+import { ArrowRight, Edit3, Sparkles, Trash2 } from 'lucide-react';
 import { Product } from '../types/product';
-import { getGradeColor } from '../utils/evaluator';
-import { ArrowRight, Sparkles, Edit3, Trash2, Users, Layers, TrendingUp } from 'lucide-react';
+import { buildEvaluationConfidence, getGradeColor } from '../utils/evaluator';
 
 interface ProductCardProps {
   product: Product;
@@ -20,124 +20,85 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onDelete,
   onAiAnalyze,
 }) => {
-  const { overallScore, ratingGrade, scores, personas } = product.evaluation;
+  const { overallScore, ratingGrade, scores } = product.evaluation;
   const gradeColor = getGradeColor(ratingGrade);
-  const primaryPersona = personas.find((p) => p.type === 'Primary') || personas[0];
+  const confidence = product.evaluation.confidence ?? buildEvaluationConfidence(product);
 
   return (
-    <div
+    <article
       onClick={onSelect}
-      className={`group relative bg-white border rounded-xl p-5 transition-all cursor-pointer flex flex-col justify-between ${
+      className={`group cursor-pointer rounded-xl border bg-white p-4 transition-all sm:p-5 ${
         isSelected
-          ? 'border-stone-900 ring-1 ring-stone-900 shadow-md'
+          ? 'border-stone-900 ring-1 ring-stone-900'
           : 'border-stone-200 hover:border-stone-400 hover:shadow-sm'
       }`}
     >
-      <div>
-        {/* Unboxed Metadata Header (No static pills) */}
-        <div className="flex items-center justify-between text-xs text-stone-600 mb-2.5">
-          <div className="flex items-center gap-1.5 font-medium">
-            <span>{product.category}</span>
-            <span aria-hidden="true" className="text-stone-300">·</span>
-            <span>{product.stage}</span>
-          </div>
-
-          {/* Overall Score Indicator */}
-          <div className="flex items-center gap-1.5">
-            <span className={`font-mono font-bold text-sm ${gradeColor.text}`}>
-              {overallScore}/100
-            </span>
-            <span className={`text-xs font-semibold px-1.5 py-0.5 rounded border ${gradeColor.bg} ${gradeColor.text} ${gradeColor.border}`}>
-              Hạng {ratingGrade}
-            </span>
-          </div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-xs font-medium text-stone-500">
+            {product.category} · {product.stage}
+          </p>
+          <h3 className="mt-1 truncate text-base font-semibold text-stone-900">
+            {product.name}
+          </h3>
         </div>
 
-        {/* Product Title & Tagline */}
-        <h3 className="text-base font-semibold text-stone-900 group-hover:text-stone-700 transition-colors line-clamp-1">
-          {product.name}
-        </h3>
-        <p className="text-xs text-stone-600 mt-1 line-clamp-2 leading-relaxed">
-          {product.tagline || product.description}
-        </p>
-
-        {/* Key Metrics Strip */}
-        <div className="mt-4 pt-3 border-t border-stone-100 grid grid-cols-3 gap-2 text-center text-xs">
-          <div className="bg-stone-50 rounded-lg p-2">
-            <span className="text-stone-600 block text-[10px] uppercase tracking-wider font-semibold">
-              Fit Khách hàng
-            </span>
-            <span className="font-mono font-semibold text-stone-900 text-sm">
-              {scores.targetCustomerFit}%
-            </span>
+        <div className="shrink-0 text-right">
+          <div className={`font-mono text-lg font-bold ${gradeColor.text}`}>
+            {overallScore}
           </div>
-          <div className="bg-stone-50 rounded-lg p-2">
-            <span className="text-stone-600 block text-[10px] uppercase tracking-wider font-semibold">
-              Giải quyết đau
-            </span>
-            <span className="font-mono font-semibold text-stone-900 text-sm">
-              {scores.painPointSolvability}%
-            </span>
-          </div>
-          <div className="bg-stone-50 rounded-lg p-2">
-            <span className="text-stone-600 block text-[10px] uppercase tracking-wider font-semibold">
-              Hào cạnh tranh
-            </span>
-            <span className="font-mono font-semibold text-stone-900 text-sm">
-              {scores.competitiveMoat}%
-            </span>
-          </div>
+          <div className="text-xs text-stone-500">tin cậy {confidence.score}%</div>
         </div>
-
-        {/* Primary Persona Snapshot */}
-        {primaryPersona && (
-          <div className="mt-3 bg-stone-50/70 rounded-lg p-2.5 text-xs border border-stone-100">
-            <div className="flex items-center gap-1 text-[11px] font-medium text-stone-600 mb-1">
-              <Users className="w-3.5 h-3.5 text-stone-500" />
-              <span>Khách hàng mục tiêu chính:</span>
-            </div>
-            <p className="font-medium text-stone-800 line-clamp-1">
-              {primaryPersona.name}
-            </p>
-            <p className="text-stone-600 text-[11px] mt-0.5 line-clamp-1">
-              {primaryPersona.demographics}
-            </p>
-          </div>
-        )}
       </div>
 
-      {/* Card Footer Actions */}
-      <div className="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between text-xs">
-        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+      <p className="mt-2 line-clamp-2 text-sm leading-5 text-stone-600">
+        {product.tagline || product.description}
+      </p>
+
+      <div className="mt-4 grid grid-cols-3 gap-2">
+        {[
+          ['Khách hàng', scores.targetCustomerFit],
+          ['Nỗi đau', scores.painPointSolvability],
+          ['Lợi thế', scores.competitiveMoat],
+        ].map(([label, value]) => (
+          <div key={String(label)} className="rounded-lg bg-stone-50 px-2 py-2 text-center">
+            <div className="text-xs text-stone-500">{label}</div>
+            <div className="mt-0.5 font-mono text-sm font-semibold text-stone-900">
+              {value}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-4 flex items-center justify-between border-t border-stone-100 pt-3">
+        <div className="flex items-center gap-1" onClick={(event) => event.stopPropagation()}>
           <button
             onClick={onAiAnalyze}
-            title="Thẩm định lại bằng AI Gemini"
-            className="inline-flex items-center gap-1 px-2.5 py-1 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-md font-medium transition-colors"
+            title="Phân tích lại bằng AI"
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-indigo-50 px-2.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>AI Audit</span>
+            <Sparkles className="h-3.5 w-3.5" /> AI
           </button>
           <button
             onClick={onEdit}
-            title="Chỉnh sửa thông tin"
-            className="p-1.5 text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded-md transition-colors"
+            title="Chỉnh sửa"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-500 hover:bg-stone-100 hover:text-stone-900"
           >
-            <Edit3 className="w-3.5 h-3.5" />
+            <Edit3 className="h-4 w-4" />
           </button>
           <button
             onClick={onDelete}
-            title="Xóa sản phẩm"
-            className="p-1.5 text-stone-600 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+            title="Xóa"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-500 hover:bg-rose-50 hover:text-rose-600"
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="flex items-center gap-1 font-medium text-stone-900 group-hover:translate-x-0.5 transition-transform">
-          <span>Xem chi tiết</span>
-          <ArrowRight className="w-3.5 h-3.5" />
+        <div className="flex items-center gap-1 text-xs font-medium text-stone-700">
+          Chi tiết <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
         </div>
       </div>
-    </div>
+    </article>
   );
 };
