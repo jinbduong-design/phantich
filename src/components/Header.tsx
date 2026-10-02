@@ -1,5 +1,13 @@
 import React from 'react';
-import { Plus, Printer, Download, Upload, RotateCcw, Sparkles } from 'lucide-react';
+import {
+  Download,
+  MoreHorizontal,
+  Plus,
+  Printer,
+  RotateCcw,
+  Upload,
+} from 'lucide-react';
+import { APP_VERSION } from '../config/appVersion';
 
 interface HeaderProps {
   activeTab: 'products' | 'evaluation' | 'personas' | 'comparison';
@@ -12,6 +20,16 @@ interface HeaderProps {
   productCount: number;
 }
 
+const navItems: Array<{
+  id: HeaderProps['activeTab'];
+  label: string;
+}> = [
+  { id: 'products', label: 'Sản phẩm' },
+  { id: 'evaluation', label: 'Đánh giá' },
+  { id: 'personas', label: 'Khách hàng' },
+  { id: 'comparison', label: 'So sánh' },
+];
+
 export const Header: React.FC<HeaderProps> = ({
   activeTab,
   setActiveTab,
@@ -23,111 +41,83 @@ export const Header: React.FC<HeaderProps> = ({
   productCount,
 }) => {
   return (
-    <header className="bg-white border-b border-stone-200 sticky top-0 z-30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Brand Identity */}
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-stone-900 text-white flex items-center justify-center font-bold tracking-tight text-lg shadow-sm">
+    <header className="sticky top-0 z-30 border-b border-stone-200 bg-white/95 backdrop-blur">
+      <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
+        <div className="flex h-14 items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-stone-900 text-sm font-bold text-white">
               P
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-stone-900 tracking-tight text-base">ProductPulse</span>
-                <span className="text-xs text-stone-600 font-mono">v2.4</span>
+                <span className="truncate text-sm font-semibold text-stone-900 sm:text-base">
+                  ProductPulse
+                </span>
+                <span className="shrink-0 rounded bg-stone-100 px-1.5 py-0.5 font-mono text-xs text-stone-600">
+                  v{APP_VERSION}
+                </span>
               </div>
-              <p className="text-xs text-stone-600 hidden sm:block">
-                Thẩm định Sản phẩm & Chân dung Khách hàng Mục tiêu
+              <p className="hidden text-xs text-stone-500 sm:block">
+                Product intelligence workspace
               </p>
             </div>
           </div>
 
-          {/* Navigation Tabs - Functional Segmented Controls */}
-          <nav className="flex items-center bg-stone-100 p-1 rounded-lg">
-            <button
-              onClick={() => setActiveTab('products')}
-              className={`px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors ${
-                activeTab === 'products'
-                  ? 'bg-white text-stone-900 shadow-sm'
-                  : 'text-stone-600 hover:text-stone-900'
-              }`}
-            >
-              Danh sách ({productCount})
-            </button>
-            <button
-              onClick={() => setActiveTab('evaluation')}
-              className={`px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors ${
-                activeTab === 'evaluation'
-                  ? 'bg-white text-stone-900 shadow-sm'
-                  : 'text-stone-600 hover:text-stone-900'
-              }`}
-            >
-              Bảng Thẩm định
-            </button>
-            <button
-              onClick={() => setActiveTab('personas')}
-              className={`px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors ${
-                activeTab === 'personas'
-                  ? 'bg-white text-stone-900 shadow-sm'
-                  : 'text-stone-600 hover:text-stone-900'
-              }`}
-            >
-              Khách hàng Mục tiêu
-            </button>
-            <button
-              onClick={() => setActiveTab('comparison')}
-              className={`px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors ${
-                activeTab === 'comparison'
-                  ? 'bg-white text-stone-900 shadow-sm'
-                  : 'text-stone-600 hover:text-stone-900'
-              }`}
-            >
-              So sánh Đối đầu
-            </button>
-          </nav>
-
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2">
-            <div className="hidden lg:flex items-center gap-1 border-r border-stone-200 pr-2 mr-1">
-              <button
-                onClick={onPrint}
-                title="In hoặc Lưu báo cáo PDF"
-                className="p-2 text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded-md transition-colors"
+          <div className="flex items-center gap-1.5">
+            <details className="relative">
+              <summary
+                className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-lg text-stone-600 transition-colors hover:bg-stone-100 hover:text-stone-900 [&::-webkit-details-marker]:hidden"
+                aria-label="Công cụ dữ liệu"
               >
-                <Printer className="w-4 h-4" />
-              </button>
-              <button
-                onClick={onExportJSON}
-                title="Tải về file dữ liệu JSON"
-                className="p-2 text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded-md transition-colors"
-              >
-                <Download className="w-4 h-4" />
-              </button>
-              <button
-                onClick={onImportJSON}
-                title="Nhập dữ liệu từ file JSON"
-                className="p-2 text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded-md transition-colors"
-              >
-                <Upload className="w-4 h-4" />
-              </button>
-              <button
-                onClick={onResetData}
-                title="Khôi phục dữ liệu mẫu ban đầu"
-                className="p-2 text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded-md transition-colors"
-              >
-                <RotateCcw className="w-4 h-4" />
-              </button>
-            </div>
+                <MoreHorizontal className="h-5 w-5" />
+              </summary>
+              <div className="absolute right-0 mt-2 w-48 overflow-hidden rounded-xl border border-stone-200 bg-white p-1.5 shadow-lg">
+                <button onClick={onPrint} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-50">
+                  <Printer className="h-4 w-4" /> Báo cáo PDF
+                </button>
+                <button onClick={onExportJSON} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-50">
+                  <Download className="h-4 w-4" /> Xuất dữ liệu
+                </button>
+                <button onClick={onImportJSON} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-50">
+                  <Upload className="h-4 w-4" /> Nhập dữ liệu
+                </button>
+                <button onClick={onResetData} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-rose-600 hover:bg-rose-50">
+                  <RotateCcw className="h-4 w-4" /> Khôi phục mẫu
+                </button>
+              </div>
+            </details>
 
             <button
               onClick={onNewProduct}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md bg-stone-900 text-white hover:bg-stone-800 transition-colors shadow-sm"
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-stone-900 px-3 text-sm font-medium text-white transition-colors hover:bg-stone-800"
             >
-              <Plus className="w-4 h-4" />
-              <span>Thêm Sản phẩm</span>
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Thêm sản phẩm</span>
+              <span className="sm:hidden">Thêm</span>
             </button>
           </div>
         </div>
+
+        <nav className="-mx-3 flex overflow-x-auto px-3 pb-2 sm:mx-0 sm:px-0">
+          <div className="flex min-w-max items-center gap-1 rounded-lg bg-stone-100 p-1">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                  activeTab === item.id
+                    ? 'bg-white text-stone-900 shadow-sm'
+                    : 'text-stone-600 hover:text-stone-900'
+                }`}
+              >
+                {item.label}
+                {item.id === 'products' && (
+                  <span className="ml-1 text-xs text-stone-400">{productCount}</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </nav>
       </div>
     </header>
   );

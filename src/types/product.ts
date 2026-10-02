@@ -21,7 +21,7 @@ export interface TargetPersona {
   type: 'Primary' | 'Secondary';
   role?: string;
   demographics: string;
-  fitScore: number; // 0 - 100
+  fitScore: number;
   painPoints: string[];
   goals: string[];
   buyingTriggers: string[];
@@ -31,11 +31,18 @@ export interface TargetPersona {
 }
 
 export interface EvaluationScores {
-  targetCustomerFit: number;      // 0 - 100 (25% weight)
-  painPointSolvability: number;   // 0 - 100 (20% weight)
-  pricingAndValue: number;        // 0 - 100 (20% weight)
-  competitiveMoat: number;        // 0 - 100 (20% weight)
-  marketScalability: number;      // 0 - 100 (15% weight)
+  targetCustomerFit: number;
+  painPointSolvability: number;
+  pricingAndValue: number;
+  competitiveMoat: number;
+  marketScalability: number;
+}
+
+export interface EvaluationConfidence {
+  score: number;
+  level: 'Thấp' | 'Trung bình' | 'Cao';
+  knownSignals: string[];
+  unknowns: string[];
 }
 
 export interface SwotAnalysis {
@@ -60,7 +67,7 @@ export interface RecommendationItem {
 export interface SimulatedReview {
   author: string;
   persona: string;
-  rating: number; // 1 - 5
+  rating: number;
   comment: string;
   sentiment: 'Tích cực' | 'Trung lập' | 'Quan ngại';
 }
@@ -72,10 +79,11 @@ export interface MarketAnalysis {
 }
 
 export interface ProductEvaluation {
-  overallScore: number; // 0 - 100
+  overallScore: number;
   ratingGrade: 'A+' | 'A' | 'B' | 'C' | 'D';
   verdict: string;
   scores: EvaluationScores;
+  confidence?: EvaluationConfidence;
   personas: TargetPersona[];
   swot: SwotAnalysis;
   marketAnalysis: MarketAnalysis;
