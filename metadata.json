@@ -1,0 +1,6 @@
+{
+  "name": "ProductPulse - Nền tảng Đánh giá Sản phẩm & Khách hàng Mục tiêu",
+  "description": "Công cụ chuyên sâu đánh giá sản phẩm, phân tích chân dung khách hàng mục tiêu (Target Persona), ma trận SWOT, định giá và mức độ phù hợp thị trường.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
