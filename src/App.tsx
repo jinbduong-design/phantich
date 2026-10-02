@@ -9,6 +9,7 @@ import { INITIAL_PRODUCTS } from './data/initialProducts';
 import { Header } from './components/Header';
 import { ProductCard } from './components/ProductCard';
 import { EvaluationOverview } from './components/EvaluationOverview';
+import { AnalysisSnapshot } from './components/AnalysisSnapshot';
 import { PersonaHub } from './components/PersonaHub';
 import { SwotMarketView } from './components/SwotMarketView';
 import { CompetitorView } from './components/CompetitorView';
@@ -19,6 +20,7 @@ import { AiAnalysisModal } from './components/AiAnalysisModal';
 import { PrintReport } from './components/PrintReport';
 import { Search, Filter, Plus, ArrowRight, LayoutGrid, Award, BarChart3, Users, Swords, ShieldCheck, MessageSquare } from 'lucide-react';
 import { normalizeEvidence, recalculateProduct } from './utils/evaluator';
+import { isProductPulseAnalysisImport, productFromAnalysisImport } from './utils/analysisImport';
 
 const STORAGE_KEY = 'productpulse_products_v3';
 const LEGACY_STORAGE_KEYS = ['productpulse_products_v2'];
@@ -50,7 +52,7 @@ export default function App() {
   // Search & Filter
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [sortBy, setSortBy] = useState<'score-desc' | 'score-asc' | 'recent'>('score-desc');
+  const [sortBy, setSortBy] = useState<'analysis-desc' | 'score-desc' | 'score-asc' | 'recent'>('analysis-desc');
 
   // Modals
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -89,6 +91,7 @@ export default function App() {
     const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
     return matchesSearch && matchesCategory;
   }).sort((a, b) => {
+    if (sortBy === 'analysis-desc') return (b.analysis?.overallScore ?? -1) - (a.analysis?.overallScore ?? -1);
     if (sortBy === 'score-desc') return b.evaluation.overallScore - a.evaluation.overallScore;
     if (sortBy === 'score-asc') return a.evaluation.overallScore - b.evaluation.overallScore;
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -202,7 +205,20 @@ export default function App() {
     reader.onload = (event) => {
       try {
         const parsed = JSON.parse(event.target?.result as string);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+
+        if (isProductPulseAnalysisImport(parsed)) {
+          const imported = productFromAnalysisImport(parsed);
+          setProducts((current) => [
+            imported,
+            ...current.filter((product) => product.id !== imported.id),
+          ]);
+          setSelectedProductId(imported.id);
+          setActiveTab('evaluation');
+          setEvalSubTab('overview');
+          alert(
+            `Đã nhập phân tích "${imported.name}". Analysis Score và Validation Score được giữ tách riêng.`,
+          );
+        } else if (Array.isArray(parsed) && parsed.length > 0) {
           const normalized = parsed.map((item: any) =>
             recalculateProduct({
               ...item,
@@ -211,9 +227,13 @@ export default function App() {
           );
           setProducts(normalized);
           setSelectedProductId(normalized[0].id);
-          alert(`Đã nhập ${normalized.length} sản phẩm. Điểm đã được tính lại từ bằng chứng; dữ liệu cũ không có evidence sẽ về trạng thái chưa đủ dữ liệu.`);
+          alert(
+            `Đã nhập ${normalized.length} sản phẩm backup. Validation Score được tính lại từ evidence.`,
+          );
         } else {
-          alert('Tệp JSON không có danh sách sản phẩm hợp lệ.');
+          alert(
+            'File không đúng định dạng ProductPulse. Cần productpulse.analysis.v1 hoặc file backup ProductPulse.',
+          );
         }
       } catch (err) {
         alert('Không thể đọc file JSON.');
@@ -237,7 +257,7 @@ export default function App() {
     window.print();
   };
 
-  const categories = ['All', 'SaaS / B2B', 'Công nghệ & IoT', 'F&B & Ẩm thực', 'Tiêu dùng & Thời trang', 'EdTech & Đào tạo', 'Sức khỏe & Y tế', 'Dịch vụ & Tài chính'];
+  const categories = ['All', 'SaaS / B2B', 'Công nghệ & IoT', 'F&B & Ẩm thực', 'Tiêu dùng & Thời trang', 'Quà tặng & Decor', 'EdTech & Đào tạo', 'Sức khỏe & Y tế', 'Dịch vụ & Tài chính'];
 
   return (
     <div className="min-h-screen bg-[#fafaf9] text-stone-900 font-sans antialiased flex flex-col">
@@ -309,8 +329,9 @@ export default function App() {
                     onChange={(e) => setSortBy(e.target.value as any)}
                     className="text-xs p-1.5 border border-stone-200 rounded-md bg-white font-medium text-stone-700"
                   >
-                    <option value="score-desc">Điểm cao nhất</option>
-                    <option value="score-asc">Điểm thấp nhất</option>
+                    <option value="analysis-desc">Analysis cao nhất</option>
+                    <option value="score-desc">Validation cao nhất</option>
+                    <option value="score-asc">Validation thấp nhất</option>
                     <option value="recent">Mới tạo gần đây</option>
                   </select>
                 </div>
@@ -339,6 +360,19 @@ export default function App() {
                   }}
                 />
               ))}
+
+              <div
+                onClick={handleImportClick}
+                className="border-2 border-dashed border-indigo-200 rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 transition-all group min-h-[260px]"
+              >
+                <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-colors mb-3">
+                  <ArrowRight className="w-6 h-6" />
+                </div>
+                <h4 className="text-sm font-bold text-stone-900">Import phân tích ChatGPT</h4>
+                <p className="text-xs text-stone-600 mt-1 max-w-xs leading-relaxed">
+                  Nhập file productpulse.analysis.v1 để dựng Analysis Score, chỉ số, rủi ro và test tiếp theo.
+                </p>
+              </div>
 
               {/* Add New Product Quick Action Tile */}
               <div
@@ -466,17 +500,22 @@ export default function App() {
 
             {/* Sub-Tab Contents */}
             {evalSubTab === 'overview' && (
-              <EvaluationOverview
-                product={selectedProduct}
-                onEditEvidence={() => {
-                  setEditingProduct(selectedProduct);
-                  setIsFormOpen(true);
-                }}
-                onTriggerAi={() => {
-                  setProductForAi(selectedProduct);
-                  setIsAiModalOpen(true);
-                }}
-              />
+              <div className="space-y-4 sm:space-y-5">
+                {selectedProduct.analysis && (
+                  <AnalysisSnapshot analysis={selectedProduct.analysis} />
+                )}
+                <EvaluationOverview
+                  product={selectedProduct}
+                  onEditEvidence={() => {
+                    setEditingProduct(selectedProduct);
+                    setIsFormOpen(true);
+                  }}
+                  onTriggerAi={() => {
+                    setProductForAi(selectedProduct);
+                    setIsAiModalOpen(true);
+                  }}
+                />
+              </div>
             )}
 
             {evalSubTab === 'personas' && (
