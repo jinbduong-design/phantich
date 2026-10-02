@@ -7,6 +7,7 @@ import {
   ProductStage,
 } from '../types/product';
 import { EMPTY_EVIDENCE, generateDefaultEvaluation } from './evaluator';
+import { normalizeEconomics, normalizeMarketProfile, normalizeOperations } from './commercial';
 
 const categories: ProductCategory[] = [
   'SaaS / B2B',
@@ -147,6 +148,9 @@ export const productFromAnalysisImport = (
     : 'Ý tưởng sơ khai';
   const evidence = { ...EMPTY_EVIDENCE };
   const analysis = normalizeProductAnalysis(input.analysis);
+  const marketProfile = normalizeMarketProfile(input.market);
+  const economics = normalizeEconomics(input.economics);
+  const operations = normalizeOperations(input.operations);
 
   return {
     id: `analysis-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -160,6 +164,9 @@ export const productFromAnalysisImport = (
     competitors: input.product.competitorsHypothesis?.trim() || '',
     evidence,
     analysis,
+    marketProfile,
+    economics,
+    operations,
     createdAt: now,
     updatedAt: now,
     evaluation: generateDefaultEvaluation({ category, evidence }),
