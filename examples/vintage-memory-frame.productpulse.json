@@ -1,0 +1,149 @@
+{
+  "schema": "productpulse.analysis.v1",
+  "product": {
+    "name": "Khung Ký Ức Vintage",
+    "tagline": "Khung ảnh cá nhân hóa mang cảm giác scrapbook và photobooth retro",
+    "category": "Quà tặng & Decor",
+    "stage": "Ý tưởng sơ khai",
+    "pricingHypothesis": "Chưa chốt — cần pricing test theo kích thước, chất liệu và mức cá nhân hóa",
+    "description": "Bộ khung ảnh trang trí tông gỗ nâu đỏ với nhiều hình dáng như oval, chữ nhật và vuông. Phần nền sử dụng họa tiết sọc, caro, chấm bi, chữ viết tay và có thể phối thêm lace/vải. Ảnh cá nhân có thể dùng dạng photobooth strip hoặc ảnh đơn, tạo cảm giác handmade, vintage và giàu tính lưu niệm.",
+    "targetCustomerHypothesis": "Giả thuyết: người trẻ 18–30 tuổi mua quà cho người yêu, bạn bè hoặc tự decor phòng; ưu tiên sản phẩm giàu cảm xúc, có thể cá nhân hóa và lên hình đẹp trên mạng xã hội.",
+    "competitorsHypothesis": "Khung ảnh gỗ phổ thông, scrapbook handmade, photobook, khung ảnh decor vintage và các sản phẩm quà tặng cá nhân hóa."
+  },
+  "analysis": {
+    "overallScore": 82,
+    "confidence": 58,
+    "summary": "Concept có sức mạnh rõ nhất ở visual identity, khả năng cá nhân hóa và giá trị quà tặng. Tuy nhiên demand, mức giá chấp nhận, biên lợi nhuận và khả năng mua lại chưa thể kết luận từ ảnh nên cần validation thực tế trước khi đầu tư SKU lớn.",
+    "metrics": [
+      {
+        "key": "visualDistinctiveness",
+        "label": "Độ khác biệt thị giác",
+        "score": 88,
+        "confidence": 92,
+        "weight": 0.1,
+        "rationale": "Tông gỗ nâu đỏ, nhiều dáng khung và nền pattern/lace tạo hệ nhận diện khá rõ so với khung ảnh phổ thông.",
+        "basis": "observed"
+      },
+      {
+        "key": "personalizationPotential",
+        "label": "Tiềm năng cá nhân hóa",
+        "score": 92,
+        "confidence": 82,
+        "weight": 0.13,
+        "rationale": "Ảnh cá nhân, photobooth strip, nền pattern và chi tiết trang trí có thể biến đổi theo người nhận và dịp tặng.",
+        "basis": "inferred"
+      },
+      {
+        "key": "giftingFit",
+        "label": "Độ phù hợp quà tặng",
+        "score": 90,
+        "confidence": 78,
+        "weight": 0.13,
+        "rationale": "Sản phẩm lưu giữ ảnh/kỷ niệm và có tính cá nhân cao, phù hợp với hành vi tặng quà cảm xúc.",
+        "basis": "inferred"
+      },
+      {
+        "key": "contentPotential",
+        "label": "Tiềm năng nội dung",
+        "score": 86,
+        "confidence": 72,
+        "weight": 0.09,
+        "rationale": "Nhiều biến thể khung, pattern và ảnh tạo được content reveal, before/after, gifting moment và room decor.",
+        "basis": "inferred"
+      },
+      {
+        "key": "assortmentPotential",
+        "label": "Khả năng phát triển bộ sưu tập",
+        "score": 89,
+        "confidence": 84,
+        "weight": 0.09,
+        "rationale": "Có thể mở rộng theo hình dáng, kích thước, pattern, dịp tặng, loại ảnh và phụ kiện mà vẫn giữ cùng DNA.",
+        "basis": "inferred"
+      },
+      {
+        "key": "productionFeasibility",
+        "label": "Khả thi sản xuất",
+        "score": 72,
+        "confidence": 55,
+        "weight": 0.1,
+        "rationale": "Cấu trúc nhìn tương đối đơn giản nhưng chưa biết vật liệu thật, công đoạn bo khung, hoàn thiện bề mặt và thời gian cá nhân hóa.",
+        "basis": "inferred"
+      },
+      {
+        "key": "marginPotential",
+        "label": "Tiềm năng biên lợi nhuận",
+        "score": 70,
+        "confidence": 30,
+        "weight": 0.1,
+        "rationale": "Sản phẩm cá nhân hóa thường có dư địa tăng perceived value, nhưng chưa có BOM, labor cost, packaging và giá bán thực tế.",
+        "basis": "inferred"
+      },
+      {
+        "key": "repeatPurchasePotential",
+        "label": "Tiềm năng mua lại",
+        "score": 74,
+        "confidence": 40,
+        "weight": 0.08,
+        "rationale": "Có nhiều dịp tặng và khả năng sưu tập nhiều khung, nhưng chưa có dữ liệu repeat purchase thực tế.",
+        "basis": "inferred"
+      },
+      {
+        "key": "scalabilityPotential",
+        "label": "Tiềm năng scale",
+        "score": 72,
+        "confidence": 42,
+        "weight": 0.09,
+        "rationale": "Concept có thể nhân SKU tốt nhưng càng nhiều tùy chọn càng tăng độ phức tạp tồn kho, QC và fulfillment.",
+        "basis": "inferred"
+      },
+      {
+        "key": "demandPotential",
+        "label": "Tiềm năng nhu cầu",
+        "score": 78,
+        "confidence": 35,
+        "weight": 0.09,
+        "rationale": "Visual và use case quà tặng có tín hiệu concept tốt, nhưng chưa research search volume, social demand, conversion hoặc doanh số.",
+        "basis": "inferred"
+      }
+    ],
+    "strengths": [
+      "Visual identity rõ và dễ nhận diện thành một collection.",
+      "Cá nhân hóa được nhiều lớp: ảnh, pattern, hình dáng, lace và bố cục.",
+      "Giá trị cảm xúc cao hơn khung ảnh tiêu chuẩn.",
+      "Có thể tạo nhiều SKU từ cùng một hệ thiết kế."
+    ],
+    "risks": [
+      "Nếu vật liệu/hoàn thiện nhìn rẻ ngoài đời, perceived value sẽ giảm mạnh.",
+      "Quá nhiều biến thể có thể làm SKU, tồn kho và QC phức tạp.",
+      "Khung và mặt bảo vệ có rủi ro hỏng/vỡ khi vận chuyển.",
+      "Chưa có dữ liệu chứng minh khách sẵn sàng trả premium cho style này."
+    ],
+    "assumptions": [
+      "Nhóm khách trẻ coi đây là quà tặng/decor có giá trị cảm xúc chứ không chỉ là một khung ảnh.",
+      "Khách sẵn sàng trả thêm cho cá nhân hóa và thiết kế vintage.",
+      "Quy trình sản xuất có thể chuẩn hóa đủ để không làm labor cost tăng quá cao."
+    ],
+    "opportunities": [
+      "Collection theo dịp: anniversary, birthday, graduation, friendship, family.",
+      "Bundle nhiều khung hoặc gallery set để tăng AOV.",
+      "Upsell photobooth strip, thiệp, lace/pattern premium hoặc packaging quà tặng.",
+      "Limited pattern theo mùa để tạo lý do quay lại."
+    ],
+    "nextTests": [
+      "Làm 3 concept creative khác nhau và test save/click/DM để xác định style nào kéo nhu cầu tốt nhất.",
+      "Test 3 khoảng giá cụ thể với cùng một mẫu để đo mức chấp nhận giá.",
+      "Phỏng vấn tối thiểu 10 người đúng nhóm mua quà/decor về lý do mua, dịp mua và lựa chọn thay thế.",
+      "Làm batch nhỏ 20 đơn để đo thời gian gia công, tỷ lệ lỗi, packaging cost và gross margin thực tế.",
+      "Sau đơn đầu tiên, test bundle/upsell và theo dõi tỷ lệ mua thêm hoặc quay lại theo dịp."
+    ],
+    "sources": [
+      {
+        "title": "Ảnh sản phẩm do người dùng cung cấp",
+        "type": "image",
+        "note": "Nguồn dùng để phân tích visual concept; không phải bằng chứng về demand hay doanh số."
+      }
+    ],
+    "generatedAt": "2026-10-02",
+    "generatedBy": "ChatGPT GPT-5.6 Sol"
+  }
+}

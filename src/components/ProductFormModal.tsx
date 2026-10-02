@@ -20,6 +20,7 @@ const CATEGORIES: ProductCategory[] = [
   'Công nghệ & IoT',
   'F&B & Ẩm thực',
   'Tiêu dùng & Thời trang',
+  'Quà tặng & Decor',
   'EdTech & Đào tạo',
   'Sức khỏe & Y tế',
   'Dịch vụ & Tài chính',

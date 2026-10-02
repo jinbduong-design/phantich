@@ -79,7 +79,7 @@ export const Header: React.FC<HeaderProps> = ({
                   <Download className="h-4 w-4" /> Xuất dữ liệu
                 </button>
                 <button onClick={onImportJSON} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-50">
-                  <Upload className="h-4 w-4" /> Nhập dữ liệu
+                  <Upload className="h-4 w-4" /> Nhập phân tích / backup
                 </button>
                 <button onClick={onResetData} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-rose-600 hover:bg-rose-50">
                   <RotateCcw className="h-4 w-4" /> Xóa dữ liệu

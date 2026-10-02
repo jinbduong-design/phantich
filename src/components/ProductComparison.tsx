@@ -101,7 +101,7 @@ export const ProductComparison: React.FC<ProductComparisonProps> = ({
               {isWinner && (
                 <div className="absolute -top-3 right-6 bg-emerald-600 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
                   <Trophy className="w-3 h-3" />
-                  <span>Điểm cao nhất</span>
+                  <span>Validation cao nhất</span>
                 </div>
               )}
 
@@ -113,24 +113,42 @@ export const ProductComparison: React.FC<ProductComparisonProps> = ({
                     <span className="font-semibold">{p.stage}</span>
                   </div>
                   <h3 className="text-lg font-bold text-stone-900">{p.name}</h3>
-                  <div className="mt-3 flex items-center justify-between bg-stone-50 p-3 rounded-lg border border-stone-100">
-                    <div>
-                      <span className="text-[10px] text-stone-600 uppercase font-semibold block">
-                        Tổng điểm
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <div className="rounded-lg border border-indigo-100 bg-indigo-50/60 p-3">
+                      <span className="block text-[10px] font-semibold uppercase text-indigo-700">
+                        Analysis
+                      </span>
+                      {p.analysis ? (
+                        <>
+                          <span className="font-mono text-2xl font-black text-indigo-950">
+                            {p.analysis.overallScore}
+                          </span>
+                          <span className="mt-0.5 block text-[10px] text-indigo-700">
+                            confidence {p.analysis.confidence}%
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-sm font-semibold text-stone-400">Chưa có</span>
+                      )}
+                    </div>
+
+                    <div className="rounded-lg border border-stone-100 bg-stone-50 p-3">
+                      <span className="block text-[10px] font-semibold uppercase text-stone-600">
+                        Validation
                       </span>
                       {p.evaluation.status === 'insufficient' ? (
                         <span className="text-sm font-semibold text-amber-700">Chưa đủ dữ liệu</span>
                       ) : (
-                        <span className="font-mono text-2xl font-black text-stone-900">
-                          {p.evaluation.overallScore}/100
-                        </span>
+                        <>
+                          <span className="font-mono text-2xl font-black text-stone-900">
+                            {p.evaluation.overallScore}
+                          </span>
+                          <span className={`ml-2 rounded border px-1.5 py-0.5 text-[10px] font-bold ${gradeColor.bg} ${gradeColor.text} ${gradeColor.border}`}>
+                            {p.evaluation.ratingGrade}
+                          </span>
+                        </>
                       )}
                     </div>
-                    {p.evaluation.status !== 'insufficient' && (
-                      <span className={`text-xs font-bold px-2 py-1 rounded border ${gradeColor.bg} ${gradeColor.text} ${gradeColor.border}`}>
-                        Hạng {p.evaluation.ratingGrade}
-                      </span>
-                    )}
                   </div>
                 </div>
 

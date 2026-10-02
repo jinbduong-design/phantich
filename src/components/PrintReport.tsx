@@ -31,6 +31,38 @@ export const PrintReport: React.FC<PrintReportProps> = ({ product }) => {
         </div>
       </div>
 
+      {product.analysis && (
+        <div className="mb-6 border border-indigo-200 rounded-lg p-4">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <h3 className="text-xs uppercase font-bold tracking-wider text-indigo-700">
+                Analysis Score
+              </h3>
+              <p className="mt-1 text-sm text-stone-700">{product.analysis.summary}</p>
+            </div>
+            <div className="text-right shrink-0">
+              <div className="font-mono text-3xl font-bold text-stone-900">
+                {product.analysis.overallScore}
+              </div>
+              <div className="text-[10px] text-stone-600">
+                confidence {product.analysis.confidence}%
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {product.analysis.metrics.slice(0, 6).map((metric) => (
+              <div key={metric.key} className="rounded border border-stone-200 p-2">
+                <div className="text-[10px] text-stone-600">{metric.label}</div>
+                <div className="mt-0.5 font-mono text-sm font-bold text-stone-900">
+                  {metric.score}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Meta & Score Strip */}
       <div className="grid grid-cols-4 gap-4 p-4 bg-stone-100 rounded-lg mb-6 text-xs">
         <div>

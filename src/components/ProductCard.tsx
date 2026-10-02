@@ -44,12 +44,26 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
 
         <div className="shrink-0 text-right">
-          {status === 'insufficient' ? (
-            <div className="text-sm font-semibold text-amber-700">Chưa đủ dữ liệu</div>
+          {product.analysis ? (
+            <>
+              <div className="text-xs font-medium text-indigo-600">Analysis</div>
+              <div className="font-mono text-lg font-bold text-indigo-950">
+                {product.analysis.overallScore}
+              </div>
+              <div className="text-xs text-stone-500">tin cậy {product.analysis.confidence}%</div>
+            </>
+          ) : status === 'insufficient' ? (
+            <>
+              <div className="text-xs font-medium text-stone-500">Validation</div>
+              <div className="text-sm font-semibold text-amber-700">Chưa đủ dữ liệu</div>
+            </>
           ) : (
-            <div className={`font-mono text-lg font-bold ${gradeColor.text}`}>{overallScore}</div>
+            <>
+              <div className="text-xs font-medium text-stone-500">Validation</div>
+              <div className={`font-mono text-lg font-bold ${gradeColor.text}`}>{overallScore}</div>
+              <div className="text-xs text-stone-500">tin cậy {confidence.score}%</div>
+            </>
           )}
-          <div className="text-xs text-stone-500">tin cậy {confidence.score}%</div>
         </div>
       </div>
 
@@ -58,19 +72,33 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       </p>
 
       <div className="mt-4 grid grid-cols-3 gap-2">
-        {[
-          ['Khách hàng', scores.targetCustomerFit],
-          ['Nỗi đau', scores.painPointSolvability],
-          ['Lợi thế', scores.competitiveMoat],
-        ].map(([label, value]) => (
+        {(product.analysis
+          ? product.analysis.metrics.slice(0, 3).map((metric) => [metric.label, metric.score] as [string, number])
+          : [
+              ['Khách hàng', scores.targetCustomerFit],
+              ['Nỗi đau', scores.painPointSolvability],
+              ['Lợi thế', scores.competitiveMoat],
+            ] as [string, number][]
+        ).map(([label, value]) => (
           <div key={String(label)} className="rounded-lg bg-stone-50 px-2 py-2 text-center">
-            <div className="text-xs text-stone-500">{label}</div>
+            <div className="truncate text-xs text-stone-500">{label}</div>
             <div className="mt-0.5 font-mono text-sm font-semibold text-stone-900">
               {value}
             </div>
           </div>
         ))}
       </div>
+
+      {product.analysis && (
+        <div className="mt-2 flex items-center justify-between text-xs text-stone-500">
+          <span>Validation</span>
+          <span>
+            {status === 'insufficient'
+              ? 'chưa đủ dữ liệu'
+              : `${overallScore}/100 · tin cậy ${confidence.score}%`}
+          </span>
+        </div>
+      )}
 
       <div className="mt-4 flex items-center justify-between border-t border-stone-100 pt-3">
         <div className="flex items-center gap-1" onClick={(event) => event.stopPropagation()}>
