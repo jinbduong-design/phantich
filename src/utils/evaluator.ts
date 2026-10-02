@@ -79,6 +79,8 @@ const grossMarginTarget = (category: ProductCategory) => {
       return 55;
     case 'Tiêu dùng & Thời trang':
       return 50;
+    case 'Quà tặng & Decor':
+      return 55;
     case 'EdTech & Đào tạo':
       return 60;
     case 'Sức khỏe & Y tế':
