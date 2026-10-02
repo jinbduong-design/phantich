@@ -1,6 +1,7 @@
 import React from 'react';
 import { Product } from '../types/product';
 import { getGradeColor } from '../utils/evaluator';
+import { basisLabel, calculateUnitEconomics, normalizeMarketProfile, normalizeOperations } from '../utils/commercial';
 
 interface PrintReportProps {
   product: Product;
@@ -9,6 +10,9 @@ interface PrintReportProps {
 export const PrintReport: React.FC<PrintReportProps> = ({ product }) => {
   const { evaluation } = product;
   const gradeColor = getGradeColor(evaluation.ratingGrade);
+  const market = normalizeMarketProfile(product.marketProfile);
+  const operations = normalizeOperations(product.operations);
+  const unit = calculateUnitEconomics(product.economics);
 
   return (
     <div className="hidden print:block p-8 bg-white text-stone-900 max-w-4xl mx-auto font-sans leading-normal">
@@ -62,6 +66,35 @@ export const PrintReport: React.FC<PrintReportProps> = ({ product }) => {
           </div>
         </div>
       )}
+
+      <div className="mb-6 grid grid-cols-3 gap-3 text-[10px]">
+        <div className="rounded border border-stone-200 p-3">
+          <div className="font-bold uppercase text-stone-500">Thị trường</div>
+          <div className="mt-1 text-xs font-semibold text-stone-900">{market.marketScope}</div>
+          <div className="mt-0.5 text-stone-600">{market.customerSegment} · {market.ageMin ?? '?'}–{market.ageMax ?? '?'}</div>
+          <div className="mt-0.5 text-stone-500">{basisLabel[market.basis]}</div>
+        </div>
+        <div className="rounded border border-stone-200 p-3">
+          <div className="font-bold uppercase text-stone-500">Economics</div>
+          <div className="mt-1 text-xs font-semibold text-stone-900">
+            Cost {unit.baseUnitCost.toLocaleString('vi-VN')} {unit.economics.currency}
+          </div>
+          <div className="mt-0.5 text-stone-600">
+            Giá bán {unit.economics.targetSellingPrice?.toLocaleString('vi-VN') || '—'} {unit.economics.currency}
+          </div>
+          <div className="mt-0.5 text-stone-500">
+            Margin {unit.contributionMarginPct === undefined ? '—' : `${unit.contributionMarginPct.toFixed(1)}%`}
+          </div>
+        </div>
+        <div className="rounded border border-stone-200 p-3">
+          <div className="font-bold uppercase text-stone-500">Vận hành</div>
+          <div className="mt-1 text-xs font-semibold text-stone-900">{operations.productionModel}</div>
+          <div className="mt-0.5 text-stone-600">
+            {operations.completionTimeHours === undefined ? 'Chưa có thời gian hoàn thiện' : `${operations.completionTimeHours} giờ / đơn`}
+          </div>
+          <div className="mt-0.5 text-stone-500">{operations.steps.length} bước quy trình</div>
+        </div>
+      </div>
 
       {/* Meta & Score Strip */}
       <div className="grid grid-cols-4 gap-4 p-4 bg-stone-100 rounded-lg mb-6 text-xs">
