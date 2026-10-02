@@ -41,7 +41,7 @@ export default function App() {
   });
 
   const [selectedProductId, setSelectedProductId] = useState<string>(() => {
-    return products[0]?.id || 'prod-1';
+    return products[0]?.id || '';
   });
 
   const [activeTab, setActiveTab] = useState<'products' | 'evaluation' | 'personas' | 'comparison'>('products');
