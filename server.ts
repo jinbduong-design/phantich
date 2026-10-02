@@ -15,18 +15,17 @@ async function startServer() {
 
   app.use(express.json({ limit: '10mb' }));
 
-  // AI Evaluation API endpoint
   app.post('/api/evaluate-ai', async (req, res) => {
     try {
       const apiKey = process.env.GEMINI_API_KEY;
       if (!apiKey) {
         return res.status(400).json({
           error: 'GEMINI_API_KEY chưa được cấu hình. Vui lòng thêm key vào mục Secrets.',
-          fallbackAvailable: true
+          fallbackAvailable: true,
         });
       }
 
-      const { product, action } = req.body;
+      const { product } = req.body;
       if (!product || !product.name) {
         return res.status(400).json({ error: 'Thông tin sản phẩm không hợp lệ.' });
       }
@@ -34,114 +33,94 @@ async function startServer() {
       const ai = new GoogleGenAI({ apiKey });
 
       const prompt = `
-Bạn là chuyên gia thẩm định sản phẩm và chiến lược thị trường (Senior Product Manager & Market Strategist).
-Hãy phân tích sản phẩm sau đây và đưa ra đánh giá chuyên sâu bằng tiếng Việt dưới định dạng JSON hợp lệ.
+Bạn là Product Researcher và Product Strategist. Hãy thẩm định sản phẩm bên dưới bằng tiếng Việt.
 
-Thông tin sản phẩm:
-- Tên sản phẩm: ${product.name}
+QUY TẮC BẮT BUỘC:
+1. Chỉ coi thông tin người dùng cung cấp là dữ liệu đã biết. Không được biến suy đoán thành sự thật.
+2. Không tự bịa TAM/SAM/SOM, thu nhập, willingness-to-pay, thị phần, tăng trưởng ngành hoặc số liệu đối thủ.
+3. Nếu thiếu bằng chứng, ghi rõ "chưa xác minh" và giảm confidence; không bù bằng lời văn dài.
+4. Điểm số phải được hiệu chỉnh bảo thủ:
+   - 0-39: rất yếu / gần như chưa có bằng chứng
+   - 40-59: giả định hợp lý nhưng chưa được kiểm chứng
+   - 60-74: có tín hiệu tốt nhưng còn khoảng trống quan trọng
+   - 75-89: chỉ dùng khi đầu vào có bằng chứng rõ
+   - 90-100: không dùng nếu chỉ có mô tả ý tưởng
+5. Phân biệt rõ score (chất lượng giả thuyết) và confidence (mức độ chắc chắn của dữ liệu).
+6. Persona, SWOT, competitor và review mô phỏng phải được ghi theo hướng giả thuyết cần xác minh, không giả làm dữ liệu thật.
+7. Khuyến nghị phải là hành động kiểm chứng cụ thể, ưu tiên việc giúp giảm uncertainty lớn nhất.
+8. Trả về JSON hợp lệ, không markdown.
+
+THÔNG TIN SẢN PHẨM:
+- Tên: ${product.name}
 - Danh mục: ${product.category}
 - Giai đoạn: ${product.stage}
-- Mức giá dự kiến / Mô hình: ${product.pricing || 'Chưa xác định'}
-- Mô tả & Tính năng cốt lõi: ${product.description}
-- Khách hàng mục tiêu sơ bộ: ${product.targetCustomerDescription || 'Chưa chi tiết'}
-- Đối thủ cạnh tranh chính: ${product.competitors || 'Chưa xác định'}
+- Giá / mô hình: ${product.pricing || 'Chưa xác định'}
+- Mô tả: ${product.description || 'Chưa có'}
+- Khách hàng mục tiêu: ${product.targetCustomerDescription || 'Chưa xác định'}
+- Đối thủ / lựa chọn thay thế: ${product.competitors || 'Chưa xác định'}
 
-Yêu cầu output JSON CỰC KỲ CHI TIẾT VÀ CHÍNH XÁC theo cấu trúc sau (không kèm markdown ngoài JSON):
+OUTPUT:
 {
-  "overallScore": number (từ 50 đến 98),
-  "verdict": "string (Tóm tắt nhận định tổng quan 2-3 câu ngắn gọn sắc sảo)",
+  "verdict": "1-2 câu, nói rõ cơ hội chính + uncertainty lớn nhất",
   "scores": {
-    "targetCustomerFit": number (0-100),
-    "painPointSolvability": number (0-100),
-    "pricingAndValue": number (0-100),
-    "competitiveMoat": number (0-100),
-    "marketScalability": number (0-100)
+    "targetCustomerFit": 0,
+    "painPointSolvability": 0,
+    "pricingAndValue": 0,
+    "competitiveMoat": 0,
+    "marketScalability": 0
+  },
+  "confidence": {
+    "score": 0,
+    "knownSignals": ["dữ liệu thực sự có trong input"],
+    "unknowns": ["điều cần xác minh tiếp"]
   },
   "personas": [
     {
-      "name": "string (ví dụ: Hoàng Minh - Trưởng phòng Vận hành SME)",
-      "type": "Primary" | "Secondary",
-      "demographics": "string (Độ tuổi, nghề nghiệp, thu nhập, nơi sống)",
-      "fitScore": number (0-100),
-      "painPoints": ["string", "string", "string"],
-      "goals": ["string", "string"],
-      "buyingTriggers": ["string", "string"],
-      "objections": ["string", "string"],
-      "willingnessToPay": "string (ví dụ: Cao, chấp nhận 2-5tr/tháng nếu giải quyết triệt để)",
-      "channels": ["string", "string"]
-    },
-    {
-      "name": "string (Persona thứ 2)",
-      "type": "Secondary",
-      "demographics": "string",
-      "fitScore": number (0-100),
-      "painPoints": ["string", "string"],
-      "goals": ["string", "string"],
-      "buyingTriggers": ["string", "string"],
-      "objections": ["string", "string"],
-      "willingnessToPay": "string",
-      "channels": ["string", "string"]
+      "name": "Tên vai trò, thêm '— giả thuyết' nếu chưa xác minh",
+      "type": "Primary",
+      "role": "Buyer / User / Influencer",
+      "demographics": "Chỉ ghi điều có thể suy ra an toàn; nếu không thì 'Chưa xác minh'",
+      "fitScore": 0,
+      "painPoints": ["..."],
+      "goals": ["..."],
+      "buyingTriggers": ["..."],
+      "objections": ["..."],
+      "willingnessToPay": "Chưa xác minh hoặc mô tả giả thuyết, không bịa con số",
+      "channels": ["Kênh giả thuyết cần kiểm chứng"]
     }
   ],
   "swot": {
-    "strengths": ["string", "string", "string"],
-    "weaknesses": ["string", "string", "string"],
-    "opportunities": ["string", "string", "string"],
-    "threats": ["string", "string", "string"]
+    "strengths": ["..."],
+    "weaknesses": ["..."],
+    "opportunities": ["..."],
+    "threats": ["..."]
   },
   "marketAnalysis": {
-    "tamSamSom": "string (Ước lượng quy mô và cơ hội thị trường)",
-    "marketDrivers": ["string", "string"],
-    "adoptionBarriers": ["string", "string"]
+    "tamSamSom": "Nếu không có dữ liệu nguồn: 'Chưa đủ dữ liệu để ước tính đáng tin cậy.'",
+    "marketDrivers": ["..."],
+    "adoptionBarriers": ["..."]
   },
   "competitorMatrix": [
     {
-      "name": "string (Đối thủ 1)",
-      "comparison": "string (Điểm mạnh/yếu so với sản phẩm này)",
-      "threatLevel": "Cao" | "Trung bình" | "Thấp"
-    },
-    {
-      "name": "string (Đối thủ 2)",
-      "comparison": "string",
-      "threatLevel": "Cao" | "Trung bình" | "Thấp"
+      "name": "...",
+      "comparison": "Nêu điều đã biết và điều chưa xác minh",
+      "threatLevel": "Cao"
     }
   ],
   "recommendations": [
     {
-      "area": "Khách hàng mục tiêu",
-      "action": "string",
-      "priority": "Cao" | "Trung bình" | "Thấp"
-    },
-    {
-      "area": "Định giá & Đóng gói",
-      "action": "string",
-      "priority": "Cao" | "Trung bình" | "Thấp"
-    },
-    {
-      "area": "Tính năng & Trải nghiệm",
-      "action": "string",
-      "priority": "Cao" | "Trung bình" | "Thấp"
-    },
-    {
-      "area": "Chiến lược Tiếp cận (GTM)",
-      "action": "string",
-      "priority": "Cao" | "Trung bình" | "Thấp"
+      "area": "...",
+      "action": "Một thử nghiệm hoặc bước nghiên cứu cụ thể",
+      "priority": "Cao"
     }
   ],
   "simulatedReviews": [
     {
-      "author": "string",
-      "persona": "string",
-      "rating": number (1-5),
-      "comment": "string",
-      "sentiment": "Tích cực" | "Trung lập" | "Quan ngại"
-    },
-    {
-      "author": "string",
-      "persona": "string",
-      "rating": number (1-5),
-      "comment": "string",
-      "sentiment": "Tích cực" | "Trung lập" | "Quan ngại"
+      "author": "Giả lập",
+      "persona": "...",
+      "rating": 3,
+      "comment": "Phản hồi giả thuyết để gợi ý câu hỏi nghiên cứu, không phải review thật.",
+      "sentiment": "Trung lập"
     }
   ]
 }
@@ -152,22 +131,22 @@ Yêu cầu output JSON CỰC KỲ CHI TIẾT VÀ CHÍNH XÁC theo cấu trúc sa
         contents: prompt,
         config: {
           responseMimeType: 'application/json',
-          temperature: 0.3,
-        }
+          temperature: 0.2,
+        },
       });
 
-      const responseText = response.text || '{}';
-      const parsed = JSON.parse(responseText);
+      const parsed = JSON.parse(response.text || '{}');
       return res.json({ success: true, analysis: parsed });
     } catch (err: any) {
       console.error('Gemini evaluation error:', err);
       return res.status(500).json({
-        error: err.message || 'Lỗi khi phân tích bằng AI. Có thể dùng bộ đánh giá thuật toán tích hợp sẵn.'
+        error:
+          err.message ||
+          'Lỗi khi phân tích bằng AI. Có thể dùng bộ đánh giá thuật toán tích hợp sẵn.',
       });
     }
   });
 
-  // Setup Vite in dev mode or static files in production
   if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.resolve(__dirname, 'dist')));
     app.get('*', (_req, res) => {
@@ -186,7 +165,7 @@ Yêu cầu output JSON CỰC KỲ CHI TIẾT VÀ CHÍNH XÁC theo cấu trúc sa
   });
 }
 
-startServer().catch(err => {
+startServer().catch((err) => {
   console.error('Failed to start server:', err);
   process.exit(1);
 });
