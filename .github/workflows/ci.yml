@@ -26,3 +26,14 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Package AI Studio source
+        run: |
+          zip -r ProductPulse-v0.4.0-AI-Studio.zip .             -x ".git/*"             -x "node_modules/*"             -x "dist/*"
+
+      - name: Upload AI Studio source
+        uses: actions/upload-artifact@v4
+        with:
+          name: ProductPulse-v0.4.0-AI-Studio
+          path: ProductPulse-v0.4.0-AI-Studio.zip
+          if-no-files-found: error
