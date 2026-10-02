@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Product, ProductCategory, TargetPersona, SwotAnalysis, CompetitorItem, RecommendationItem, EvaluationScores, ProductEvaluation } from './types/product';
+import { Product, TargetPersona, SwotAnalysis, CompetitorItem, RecommendationItem, ProductEvaluation } from './types/product';
 import { INITIAL_PRODUCTS } from './data/initialProducts';
 import { Header } from './components/Header';
 import { ProductCard } from './components/ProductCard';
@@ -18,9 +18,10 @@ import { ProductFormModal } from './components/ProductFormModal';
 import { AiAnalysisModal } from './components/AiAnalysisModal';
 import { PrintReport } from './components/PrintReport';
 import { Search, Filter, Plus, ArrowRight, LayoutGrid, Award, BarChart3, Users, Swords, ShieldCheck, MessageSquare } from 'lucide-react';
-import { calculateOverallScore, calculateGrade } from './utils/evaluator';
+import { normalizeEvidence, recalculateProduct } from './utils/evaluator';
 
-const STORAGE_KEY = 'productpulse_products_v2';
+const STORAGE_KEY = 'productpulse_products_v3';
+const LEGACY_STORAGE_KEYS = ['productpulse_products_v2'];
 
 export default function App() {
   // Initialize state from local storage or initial products
@@ -60,7 +61,15 @@ export default function App() {
   // Hidden file input for JSON import
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Sync to local storage
+  useEffect(() => {
+    try {
+      LEGACY_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
+    } catch (e) {
+      console.warn('Failed to clear legacy localStorage', e);
+    }
+  }, []);
+
+  // Sync only user-created / imported products. No fictional seed data.
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
@@ -102,38 +111,14 @@ export default function App() {
   };
 
   const handleDeleteProduct = (productId: string) => {
-    if (products.length <= 1) {
-      alert('Phải giữ lại ít nhất 1 sản phẩm trong danh mục.');
-      return;
-    }
-    if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi hệ thống?')) {
+    if (confirm('Xóa sản phẩm này và toàn bộ dữ liệu đánh giá của nó?')) {
       const remaining = products.filter((p) => p.id !== productId);
       setProducts(remaining);
       if (selectedProductId === productId) {
-        setSelectedProductId(remaining[0].id);
+        setSelectedProductId(remaining[0]?.id || '');
+        if (remaining.length === 0) setActiveTab('products');
       }
     }
-  };
-
-  const handleUpdateScores = (newScores: EvaluationScores, newNotes?: string) => {
-    if (!selectedProduct) return;
-    const overallScore = calculateOverallScore(newScores);
-    const ratingGrade = calculateGrade(overallScore);
-
-    const updated: Product = {
-      ...selectedProduct,
-      updatedAt: new Date().toISOString().split('T')[0],
-      evaluation: {
-        ...selectedProduct.evaluation,
-        scores: newScores,
-        overallScore,
-        ratingGrade,
-        userNotes: newNotes !== undefined ? newNotes : selectedProduct.evaluation.userNotes,
-        lastEvaluatedAt: new Date().toLocaleDateString('vi-VN'),
-      },
-    };
-
-    setProducts(products.map((p) => (p.id === updated.id ? updated : p)));
   };
 
   const handleUpdatePersonas = (updatedPersonas: TargetPersona[]) => {
@@ -217,12 +202,18 @@ export default function App() {
     reader.onload = (event) => {
       try {
         const parsed = JSON.parse(event.target?.result as string);
-        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].evaluation) {
-          setProducts(parsed);
-          setSelectedProductId(parsed[0].id);
-          alert(`Đã nhập thành công ${parsed.length} sản phẩm!`);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const normalized = parsed.map((item: any) =>
+            recalculateProduct({
+              ...item,
+              evidence: normalizeEvidence(item.evidence),
+            } as Product),
+          );
+          setProducts(normalized);
+          setSelectedProductId(normalized[0].id);
+          alert(`Đã nhập ${normalized.length} sản phẩm. Điểm đã được tính lại từ bằng chứng; dữ liệu cũ không có evidence sẽ về trạng thái chưa đủ dữ liệu.`);
         } else {
-          alert('Tệp JSON không đúng cấu trúc sản phẩm của ProductPulse.');
+          alert('Tệp JSON không có danh sách sản phẩm hợp lệ.');
         }
       } catch (err) {
         alert('Không thể đọc file JSON.');
@@ -233,10 +224,12 @@ export default function App() {
   };
 
   const handleResetData = () => {
-    if (confirm('Khôi phục toàn bộ 3 sản phẩm mẫu mặc định? Các chỉnh sửa hiện tại sẽ được thay thế.')) {
-      setProducts(INITIAL_PRODUCTS);
-      setSelectedProductId(INITIAL_PRODUCTS[0].id);
+    if (confirm('Xóa toàn bộ dữ liệu sản phẩm đang lưu trên thiết bị này?')) {
+      setProducts([]);
+      setSelectedProductId('');
+      setActiveTab('products');
       localStorage.removeItem(STORAGE_KEY);
+      LEGACY_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
     }
   };
 
@@ -467,7 +460,7 @@ export default function App() {
                 }`}
               >
                 <MessageSquare className="w-4 h-4" />
-                <span>Phản hồi & Lộ trình</span>
+                <span>Bằng chứng & Hành động</span>
               </button>
             </div>
 
@@ -475,7 +468,10 @@ export default function App() {
             {evalSubTab === 'overview' && (
               <EvaluationOverview
                 product={selectedProduct}
-                onUpdateScores={handleUpdateScores}
+                onEditEvidence={() => {
+                  setEditingProduct(selectedProduct);
+                  setIsFormOpen(true);
+                }}
                 onTriggerAi={() => {
                   setProductForAi(selectedProduct);
                   setIsAiModalOpen(true);
@@ -512,7 +508,6 @@ export default function App() {
             {evalSubTab === 'reviews' && (
               <ReviewsAndRecommendations
                 recommendations={selectedProduct.evaluation.recommendations}
-                simulatedReviews={selectedProduct.evaluation.simulatedReviews}
                 onUpdateRecommendations={handleUpdateRecommendations}
               />
             )}
@@ -599,7 +594,7 @@ export default function App() {
           <div className="flex items-center gap-4">
             <span>Dữ liệu lưu trữ cục bộ (Local Persistence)</span>
             <span aria-hidden="true" className="text-stone-300">·</span>
-            <span>Hỗ trợ AI Gemini 3.8 Flash</span>
+            <span>AI chỉ gợi ý · điểm tính từ evidence</span>
           </div>
         </div>
       </footer>
