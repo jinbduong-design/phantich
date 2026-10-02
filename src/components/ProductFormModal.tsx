@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Product, ProductCategory, ProductEvidence, ProductStage } from '../types/product';
+import { CommercialOperationsFields } from './CommercialOperationsFields';
+import { normalizeEconomics, normalizeMarketProfile, normalizeOperations } from '../utils/commercial';
 import {
   EMPTY_EVIDENCE,
   generateDefaultEvaluation,
@@ -44,6 +46,9 @@ const makeInitialForm = (product?: Product | null) => ({
   description: product?.description || '',
   targetCustomerDescription: product?.targetCustomerDescription || '',
   competitors: product?.competitors || '',
+  marketProfile: normalizeMarketProfile(product?.marketProfile),
+  economics: normalizeEconomics(product?.economics),
+  operations: normalizeOperations(product?.operations),
   evidence: normalizeEvidence(product?.evidence || EMPTY_EVIDENCE),
 });
 
@@ -250,6 +255,15 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               />
             </label>
           </section>
+
+          <CommercialOperationsFields
+            market={formData.marketProfile}
+            economics={formData.economics}
+            operations={formData.operations}
+            onMarketChange={(marketProfile) => setFormData({ ...formData, marketProfile })}
+            onEconomicsChange={(economics) => setFormData({ ...formData, economics })}
+            onOperationsChange={(operations) => setFormData({ ...formData, operations })}
+          />
 
           <section className="rounded-xl border border-stone-200 bg-stone-50/70 p-4">
             <div className="mb-4">
