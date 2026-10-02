@@ -14,11 +14,12 @@ import { PersonaHub } from './components/PersonaHub';
 import { SwotMarketView } from './components/SwotMarketView';
 import { CompetitorView } from './components/CompetitorView';
 import { ReviewsAndRecommendations } from './components/ReviewsAndRecommendations';
+import { EconomicsOperationsView } from './components/EconomicsOperationsView';
 import { ProductComparison } from './components/ProductComparison';
 import { ProductFormModal } from './components/ProductFormModal';
 import { AiAnalysisModal } from './components/AiAnalysisModal';
 import { PrintReport } from './components/PrintReport';
-import { Search, Filter, Plus, ArrowRight, LayoutGrid, Award, BarChart3, Users, Swords, ShieldCheck, MessageSquare } from 'lucide-react';
+import { Search, Filter, Plus, ArrowRight, LayoutGrid, Award, BarChart3, Users, Swords, ShieldCheck, MessageSquare, Factory } from 'lucide-react';
 import { normalizeEvidence, recalculateProduct } from './utils/evaluator';
 import { isProductPulseAnalysisImport, productFromAnalysisImport } from './utils/analysisImport';
 
@@ -47,7 +48,7 @@ export default function App() {
   });
 
   const [activeTab, setActiveTab] = useState<'products' | 'evaluation' | 'personas' | 'comparison'>('products');
-  const [evalSubTab, setEvalSubTab] = useState<'overview' | 'personas' | 'swot' | 'competitors' | 'reviews'>('overview');
+  const [evalSubTab, setEvalSubTab] = useState<'overview' | 'personas' | 'swot' | 'competitors' | 'operations' | 'reviews'>('overview');
 
   // Search & Filter
   const [searchQuery, setSearchQuery] = useState('');
@@ -486,6 +487,18 @@ export default function App() {
               </button>
 
               <button
+                onClick={() => setEvalSubTab('operations')}
+                className={`flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-colors whitespace-nowrap ${
+                  evalSubTab === 'operations'
+                    ? 'bg-stone-900 text-white shadow-xs'
+                    : 'text-stone-600 hover:text-stone-900'
+                }`}
+              >
+                <Factory className="w-4 h-4" />
+                <span>Kinh tế & Vận hành</span>
+              </button>
+
+              <button
                 onClick={() => setEvalSubTab('reviews')}
                 className={`flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-colors whitespace-nowrap ${
                   evalSubTab === 'reviews'
@@ -541,6 +554,16 @@ export default function App() {
               <CompetitorView
                 competitorMatrix={selectedProduct.evaluation.competitorMatrix}
                 onUpdateCompetitors={handleUpdateCompetitors}
+              />
+            )}
+
+            {evalSubTab === 'operations' && (
+              <EconomicsOperationsView
+                product={selectedProduct}
+                onEdit={() => {
+                  setEditingProduct(selectedProduct);
+                  setIsFormOpen(true);
+                }}
               />
             )}
 

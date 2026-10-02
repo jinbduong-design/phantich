@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Product } from '../types/product';
 import { getGradeColor } from '../utils/evaluator';
+import { calculateUnitEconomics, normalizeMarketProfile, normalizeOperations } from '../utils/commercial';
 import { ArrowLeftRight, Check, Trophy, Users, ShieldAlert, Zap } from 'lucide-react';
 
 interface ProductComparisonProps {
@@ -90,6 +91,9 @@ export const ProductComparison: React.FC<ProductComparisonProps> = ({
             p.evaluation.status !== 'insufficient';
           const gradeColor = getGradeColor(p.evaluation.ratingGrade);
           const primaryPersona = p.evaluation.personas.find((per) => per.type === 'Primary') || p.evaluation.personas[0];
+          const market = normalizeMarketProfile(p.marketProfile);
+          const operations = normalizeOperations(p.operations);
+          const unit = calculateUnitEconomics(p.economics);
 
           return (
             <div
@@ -191,6 +195,35 @@ export const ProductComparison: React.FC<ProductComparisonProps> = ({
                     <span className="font-mono font-semibold text-stone-900">
                       {p.evaluation.scores.marketScalability}%
                     </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="rounded-lg border border-stone-100 bg-stone-50 p-3">
+                    <span className="block text-[10px] font-semibold uppercase text-stone-500">Giá bán</span>
+                    <span className="mt-1 block font-mono font-semibold text-stone-900">
+                      {unit.economics.targetSellingPrice === undefined
+                        ? '—'
+                        : new Intl.NumberFormat(unit.economics.currency === 'VND' ? 'vi-VN' : 'en-US', {
+                            style: 'currency',
+                            currency: unit.economics.currency,
+                            maximumFractionDigits: unit.economics.currency === 'VND' ? 0 : 2,
+                          }).format(unit.economics.targetSellingPrice)}
+                    </span>
+                  </div>
+                  <div className="rounded-lg border border-stone-100 bg-stone-50 p-3">
+                    <span className="block text-[10px] font-semibold uppercase text-stone-500">Margin</span>
+                    <span className="mt-1 block font-mono font-semibold text-stone-900">
+                      {unit.contributionMarginPct === undefined ? '—' : `${unit.contributionMarginPct.toFixed(1)}%`}
+                    </span>
+                  </div>
+                  <div className="rounded-lg border border-stone-100 bg-stone-50 p-3">
+                    <span className="block text-[10px] font-semibold uppercase text-stone-500">Phân khúc</span>
+                    <span className="mt-1 block font-semibold text-stone-900">{market.customerSegment}</span>
+                  </div>
+                  <div className="rounded-lg border border-stone-100 bg-stone-50 p-3">
+                    <span className="block text-[10px] font-semibold uppercase text-stone-500">Sản xuất</span>
+                    <span className="mt-1 block font-semibold text-stone-900">{operations.productionModel}</span>
                   </div>
                 </div>
 
