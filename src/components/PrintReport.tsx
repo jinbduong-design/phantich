@@ -1,6 +1,6 @@
 import React from 'react';
 import { Product } from '../types/product';
-import { calculateOverallScore, getGradeColor } from '../utils/evaluator';
+import { getGradeColor } from '../utils/evaluator';
 
 interface PrintReportProps {
   product: Product;
@@ -47,8 +47,15 @@ export const PrintReport: React.FC<PrintReportProps> = ({ product }) => {
         </div>
         <div>
           <span className="text-stone-600 block text-[10px] uppercase font-bold">Điểm Thẩm định</span>
-          <span className="text-base font-bold font-mono text-stone-900">
-            {evaluation.overallScore}/100 (Hạng {evaluation.ratingGrade})
+          {evaluation.status === 'insufficient' ? (
+            <span className="text-sm font-bold text-amber-700">Chưa đủ dữ liệu</span>
+          ) : (
+            <span className="text-base font-bold font-mono text-stone-900">
+              {evaluation.overallScore}/100 (Hạng {evaluation.ratingGrade})
+            </span>
+          )}
+          <span className="mt-1 block text-[10px] text-stone-600">
+            Độ tin cậy: {evaluation.confidence.score}%
           </span>
         </div>
       </div>
@@ -56,7 +63,7 @@ export const PrintReport: React.FC<PrintReportProps> = ({ product }) => {
       {/* Executive Verdict */}
       <div className="mb-6">
         <h3 className="text-xs uppercase font-bold tracking-wider text-stone-600 mb-1">
-          Nhận định Tổng quan (Executive Verdict)
+          Trạng thái Bằng chứng
         </h3>
         <p className="text-sm text-stone-800 p-3 bg-stone-50 border border-stone-200 rounded-md leading-relaxed">
           {evaluation.verdict}
@@ -66,7 +73,7 @@ export const PrintReport: React.FC<PrintReportProps> = ({ product }) => {
       {/* 5 Pillars Table */}
       <div className="mb-6">
         <h3 className="text-xs uppercase font-bold tracking-wider text-stone-600 mb-2">
-          Điểm số Chi tiết 5 Trụ cột Thẩm định
+          Điểm số từ Dữ liệu Kiểm chứng
         </h3>
         <table className="w-full text-xs text-left border border-stone-200">
           <thead className="bg-stone-100 border-b border-stone-200">

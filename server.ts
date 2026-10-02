@@ -20,107 +20,55 @@ async function startServer() {
       const apiKey = process.env.GEMINI_API_KEY;
       if (!apiKey) {
         return res.status(400).json({
-          error: 'GEMINI_API_KEY chưa được cấu hình. Vui lòng thêm key vào mục Secrets.',
+          error: 'GEMINI_API_KEY chưa được cấu hình.',
           fallbackAvailable: true,
         });
       }
 
       const { product } = req.body;
-      if (!product || !product.name) {
+      if (!product?.name) {
         return res.status(400).json({ error: 'Thông tin sản phẩm không hợp lệ.' });
       }
 
       const ai = new GoogleGenAI({ apiKey });
 
       const prompt = `
-Bạn là Product Researcher và Product Strategist. Hãy thẩm định sản phẩm bên dưới bằng tiếng Việt.
+Bạn là Product Researcher. Nhiệm vụ của bạn KHÔNG PHẢI chấm điểm sản phẩm.
+Điểm số của hệ thống được tính bằng engine xác định từ dữ liệu kiểm chứng thực tế.
 
-QUY TẮC BẮT BUỘC:
-1. Chỉ coi thông tin người dùng cung cấp là dữ liệu đã biết. Không được biến suy đoán thành sự thật.
-2. Không tự bịa TAM/SAM/SOM, thu nhập, willingness-to-pay, thị phần, tăng trưởng ngành hoặc số liệu đối thủ.
-3. Nếu thiếu bằng chứng, ghi rõ "chưa xác minh" và giảm confidence; không bù bằng lời văn dài.
-4. Điểm số phải được hiệu chỉnh bảo thủ:
-   - 0-39: rất yếu / gần như chưa có bằng chứng
-   - 40-59: giả định hợp lý nhưng chưa được kiểm chứng
-   - 60-74: có tín hiệu tốt nhưng còn khoảng trống quan trọng
-   - 75-89: chỉ dùng khi đầu vào có bằng chứng rõ
-   - 90-100: không dùng nếu chỉ có mô tả ý tưởng
-5. Phân biệt rõ score (chất lượng giả thuyết) và confidence (mức độ chắc chắn của dữ liệu).
-6. Persona, SWOT, competitor và review mô phỏng phải được ghi theo hướng giả thuyết cần xác minh, không giả làm dữ liệu thật.
-7. Khuyến nghị phải là hành động kiểm chứng cụ thể, ưu tiên việc giúp giảm uncertainty lớn nhất.
-8. Trả về JSON hợp lệ, không markdown.
+Hãy đọc dữ liệu dưới đây và chỉ làm 2 việc:
+1. Chỉ ra tối đa 5 rủi ro / giả định cần kiểm chứng tiếp.
+2. Đề xuất tối đa 5 hành động kiểm chứng cụ thể.
 
-THÔNG TIN SẢN PHẨM:
-- Tên: ${product.name}
-- Danh mục: ${product.category}
-- Giai đoạn: ${product.stage}
-- Giá / mô hình: ${product.pricing || 'Chưa xác định'}
-- Mô tả: ${product.description || 'Chưa có'}
-- Khách hàng mục tiêu: ${product.targetCustomerDescription || 'Chưa xác định'}
-- Đối thủ / lựa chọn thay thế: ${product.competitors || 'Chưa xác định'}
+QUY TẮC:
+- Không tự tạo số liệu thị trường, TAM/SAM/SOM, doanh thu, tỷ lệ tăng trưởng, willingness-to-pay hoặc dữ liệu đối thủ.
+- Không tạo persona giả, review giả hoặc lời chứng thực giả.
+- Không nói một giả định là sự thật.
+- Nếu dữ liệu chưa đủ, nói rõ dữ liệu nào đang thiếu.
+- Hành động phải đo được: phỏng vấn bao nhiêu người, test gì, đo chỉ số nào.
+- Không trả về score, grade, confidence hay dự đoán thành công.
+- Trả JSON hợp lệ, không markdown.
+
+SẢN PHẨM:
+Tên: ${product.name}
+Ngành: ${product.category}
+Giai đoạn: ${product.stage}
+Giá: ${product.pricing || 'Chưa có'}
+Mô tả: ${product.description || 'Chưa có'}
+Khách hàng mục tiêu: ${product.targetCustomerDescription || 'Chưa có'}
+Đối thủ / cách thay thế: ${product.competitors || 'Chưa có'}
+
+DỮ LIỆU KIỂM CHỨNG:
+${JSON.stringify(product.evidence || {}, null, 2)}
 
 OUTPUT:
 {
-  "verdict": "1-2 câu, nói rõ cơ hội chính + uncertainty lớn nhất",
-  "scores": {
-    "targetCustomerFit": 0,
-    "painPointSolvability": 0,
-    "pricingAndValue": 0,
-    "competitiveMoat": 0,
-    "marketScalability": 0
-  },
-  "confidence": {
-    "score": 0,
-    "knownSignals": ["dữ liệu thực sự có trong input"],
-    "unknowns": ["điều cần xác minh tiếp"]
-  },
-  "personas": [
-    {
-      "name": "Tên vai trò, thêm '— giả thuyết' nếu chưa xác minh",
-      "type": "Primary",
-      "role": "Buyer / User / Influencer",
-      "demographics": "Chỉ ghi điều có thể suy ra an toàn; nếu không thì 'Chưa xác minh'",
-      "fitScore": 0,
-      "painPoints": ["..."],
-      "goals": ["..."],
-      "buyingTriggers": ["..."],
-      "objections": ["..."],
-      "willingnessToPay": "Chưa xác minh hoặc mô tả giả thuyết, không bịa con số",
-      "channels": ["Kênh giả thuyết cần kiểm chứng"]
-    }
-  ],
-  "swot": {
-    "strengths": ["..."],
-    "weaknesses": ["..."],
-    "opportunities": ["..."],
-    "threats": ["..."]
-  },
-  "marketAnalysis": {
-    "tamSamSom": "Nếu không có dữ liệu nguồn: 'Chưa đủ dữ liệu để ước tính đáng tin cậy.'",
-    "marketDrivers": ["..."],
-    "adoptionBarriers": ["..."]
-  },
-  "competitorMatrix": [
-    {
-      "name": "...",
-      "comparison": "Nêu điều đã biết và điều chưa xác minh",
-      "threatLevel": "Cao"
-    }
-  ],
+  "risks": ["string"],
   "recommendations": [
     {
-      "area": "...",
-      "action": "Một thử nghiệm hoặc bước nghiên cứu cụ thể",
-      "priority": "Cao"
-    }
-  ],
-  "simulatedReviews": [
-    {
-      "author": "Giả lập",
-      "persona": "...",
-      "rating": 3,
-      "comment": "Phản hồi giả thuyết để gợi ý câu hỏi nghiên cứu, không phải review thật.",
-      "sentiment": "Trung lập"
+      "area": "Khách hàng | Giải pháp | Định giá | Cạnh tranh | Phân phối | Economics",
+      "action": "string",
+      "priority": "Cao | Trung bình | Thấp"
     }
   ]
 }
@@ -131,18 +79,24 @@ OUTPUT:
         contents: prompt,
         config: {
           responseMimeType: 'application/json',
-          temperature: 0.2,
+          temperature: 0.15,
         },
       });
 
       const parsed = JSON.parse(response.text || '{}');
-      return res.json({ success: true, analysis: parsed });
+      return res.json({
+        success: true,
+        analysis: {
+          risks: Array.isArray(parsed.risks) ? parsed.risks.slice(0, 5) : [],
+          recommendations: Array.isArray(parsed.recommendations)
+            ? parsed.recommendations.slice(0, 5)
+            : [],
+        },
+      });
     } catch (err: any) {
-      console.error('Gemini evaluation error:', err);
+      console.error('Gemini analysis error:', err);
       return res.status(500).json({
-        error:
-          err.message ||
-          'Lỗi khi phân tích bằng AI. Có thể dùng bộ đánh giá thuật toán tích hợp sẵn.',
+        error: err.message || 'Không thể chạy AI analysis.',
       });
     }
   });

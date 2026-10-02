@@ -82,7 +82,7 @@ export const Header: React.FC<HeaderProps> = ({
                   <Upload className="h-4 w-4" /> Nhập dữ liệu
                 </button>
                 <button onClick={onResetData} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-rose-600 hover:bg-rose-50">
-                  <RotateCcw className="h-4 w-4" /> Khôi phục mẫu
+                  <RotateCcw className="h-4 w-4" /> Xóa dữ liệu
                 </button>
               </div>
             </details>

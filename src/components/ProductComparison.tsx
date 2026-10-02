@@ -32,9 +32,11 @@ export const ProductComparison: React.FC<ProductComparisonProps> = ({
 
   const comparedProducts = products.filter((p) => selectedIds.includes(p.id));
 
-  // Determine highest score product
-  const bestProduct = [...comparedProducts].sort(
-    (a, b) => b.evaluation.overallScore - a.evaluation.overallScore
+  const comparableProducts = comparedProducts.filter(
+    (product) => product.evaluation.status !== 'insufficient',
+  );
+  const bestProduct = [...comparableProducts].sort(
+    (a, b) => b.evaluation.overallScore - a.evaluation.overallScore,
   )[0];
 
   return (
@@ -81,7 +83,11 @@ export const ProductComparison: React.FC<ProductComparisonProps> = ({
       {/* Comparison Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {comparedProducts.map((p) => {
-          const isWinner = bestProduct && bestProduct.id === p.id && comparedProducts.length > 1;
+          const isWinner =
+            bestProduct &&
+            bestProduct.id === p.id &&
+            comparableProducts.length > 1 &&
+            p.evaluation.status !== 'insufficient';
           const gradeColor = getGradeColor(p.evaluation.ratingGrade);
           const primaryPersona = p.evaluation.personas.find((per) => per.type === 'Primary') || p.evaluation.personas[0];
 
@@ -112,13 +118,19 @@ export const ProductComparison: React.FC<ProductComparisonProps> = ({
                       <span className="text-[10px] text-stone-600 uppercase font-semibold block">
                         Tổng điểm
                       </span>
-                      <span className="font-mono text-2xl font-black text-stone-900">
-                        {p.evaluation.overallScore}/100
-                      </span>
+                      {p.evaluation.status === 'insufficient' ? (
+                        <span className="text-sm font-semibold text-amber-700">Chưa đủ dữ liệu</span>
+                      ) : (
+                        <span className="font-mono text-2xl font-black text-stone-900">
+                          {p.evaluation.overallScore}/100
+                        </span>
+                      )}
                     </div>
-                    <span className={`text-xs font-bold px-2 py-1 rounded border ${gradeColor.bg} ${gradeColor.text} ${gradeColor.border}`}>
-                      Hạng {p.evaluation.ratingGrade}
-                    </span>
+                    {p.evaluation.status !== 'insufficient' && (
+                      <span className={`text-xs font-bold px-2 py-1 rounded border ${gradeColor.bg} ${gradeColor.text} ${gradeColor.border}`}>
+                        Hạng {p.evaluation.ratingGrade}
+                      </span>
+                    )}
                   </div>
                 </div>
 
