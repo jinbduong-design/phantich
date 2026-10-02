@@ -1,31 +1,45 @@
 # ProductPulse
 
-Product evaluation workspace for turning product ideas into clearer decisions.
+Product evaluation workspace focused on **evidence, not confident-looking guesses**.
 
-**Current version:** v0.1.0 — Product Intelligence Foundation
+**Current version:** v0.2.0 — Evidence-based Evaluation
 
-## What v0.1.0 changes
+## Evaluation rules
 
-- Separates product **score** from **data confidence**.
-- Stops default scoring from rewarding long descriptions or filled-in fields as if they were proof.
-- Makes AI analysis conservative about missing evidence and unsupported market claims.
-- Simplifies the main header, product cards and evaluation screen for desktop and mobile.
-- Keeps local JSON import/export and the existing persona, SWOT, competitor, comparison and report flows.
+ProductPulse does not preload fictional products or customer reviews.
 
-## Development direction
+A product score is calculated from validation evidence such as:
+- customer interviews and problem confirmation
+- solution tests and observed outcomes
+- pricing tests and actual price acceptance
+- paying and repeat customers
+- competitive comparisons and win signals
+- acquisition experiments and repeatable channels
+- gross margin and differentiation evidence
 
-See [ROADMAP.md](./ROADMAP.md) for the planned path from v0.2 UX Foundation to v1.0 Product Intelligence.
+Long descriptions, filled fields, product stage, or AI wording do **not** directly increase the product score.
 
-## Local development
+If evidence is weak, the product is shown as **Chưa đủ dữ liệu** instead of being given an authoritative-looking score.
+
+## AI boundary
+
+Gemini can suggest risks and validation actions. It cannot:
+- set or modify the evaluation score
+- invent TAM/SAM/SOM or market statistics
+- create fake reviews/testimonials
+- manufacture validation evidence
+
+## Local data
+
+Products are stored locally in the browser. v0.2.0 uses a new storage namespace and removes the old seeded-data namespace.
+
+## Development
 
 ```bash
 npm install
+npm run lint
+npm run build
 npm run dev
 ```
 
-Checks:
-
-```bash
-npm run lint
-npm run build
-```
+See [ROADMAP.md](./ROADMAP.md).
