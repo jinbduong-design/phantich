@@ -62,7 +62,83 @@ export interface ProductPulseAnalysisImport {
     targetCustomerHypothesis?: string;
     competitorsHypothesis?: string;
   };
+  market?: Partial<MarketProfile>;
+  economics?: Partial<UnitEconomics>;
+  operations?: Partial<OperationsProfile>;
   analysis: ProductAnalysis;
+}
+
+export type DataBasis = 'unknown' | 'hypothesis' | 'quote' | 'actual';
+
+export type CustomerPriceSegment =
+  | 'Thấp'
+  | 'Trung bình'
+  | 'Cao cấp'
+  | 'Luxury'
+  | 'Chưa xác định';
+
+export type MarketScope =
+  | 'Việt Nam'
+  | 'Quốc tế'
+  | 'Cả hai'
+  | 'Chưa xác định';
+
+export interface MarketProfile {
+  basis: DataBasis;
+  customerSegment: CustomerPriceSegment;
+  ageMin?: number;
+  ageMax?: number;
+  marketScope: MarketScope;
+  targetMarkets: string[];
+  channels: string[];
+  notes: string;
+}
+
+export type ProductionModel =
+  | 'Tự sản xuất'
+  | 'Gia công'
+  | 'Nhập thành phẩm'
+  | 'Hybrid'
+  | 'Chưa xác định';
+
+export type FulfillmentModel =
+  | 'Làm theo đơn'
+  | 'Có sẵn'
+  | 'Hybrid'
+  | 'Chưa xác định';
+
+export interface UnitEconomics {
+  currency: 'VND' | 'USD';
+  basis: DataBasis;
+  importUnitCost?: number;
+  materialCost?: number;
+  laborCost?: number;
+  packagingCost?: number;
+  otherUnitCost?: number;
+  platformFeePct?: number;
+  targetSellingPrice?: number;
+}
+
+export interface OperationStep {
+  id: string;
+  name: string;
+  owner?: string;
+  durationMinutes?: number;
+  note?: string;
+}
+
+export interface OperationsProfile {
+  basis: DataBasis;
+  productionModel: ProductionModel;
+  fulfillmentModel: FulfillmentModel;
+  supplierCountry: string;
+  moq?: number;
+  supplierLeadTimeDays?: number;
+  completionTimeHours?: number;
+  qcTimeMinutes?: number;
+  stockPolicy: string;
+  steps: OperationStep[];
+  notes: string;
 }
 
 export type DifferentiationProof =
@@ -198,6 +274,9 @@ export interface Product {
   competitors: string;
   evidence: ProductEvidence;
   analysis?: ProductAnalysis;
+  marketProfile?: MarketProfile;
+  economics?: UnitEconomics;
+  operations?: OperationsProfile;
   createdAt: string;
   updatedAt: string;
   evaluation: ProductEvaluation;
