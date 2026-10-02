@@ -1,14 +1,26 @@
 # ProductPulse
 
-Product evaluation workspace focused on **evidence, not confident-looking guesses**.
+Product intelligence workspace that keeps **strategic analysis** separate from **real-world validation**.
 
-**Current version:** v0.2.0 — Evidence-based Evaluation
+**Current version:** v0.3.0 — External Analysis Import
 
-## Evaluation rules
+## Two score layers
 
-ProductPulse does not preload fictional products or customer reviews.
+### Analysis Score
+Created outside the app (for example by ChatGPT) from product analysis, images, research, reasoning and sourced signals.
 
-A product score is calculated from validation evidence such as:
+It can contain:
+- arbitrary product metrics
+- score + confidence per metric
+- rationale
+- observed / inferred / researched labels
+- assumptions
+- risks and opportunities
+- next tests
+- sources
+
+### Validation Score
+Calculated only from evidence entered into ProductPulse:
 - customer interviews and problem confirmation
 - solution tests and observed outcomes
 - pricing tests and actual price acceptance
@@ -17,21 +29,33 @@ A product score is calculated from validation evidence such as:
 - acquisition experiments and repeatable channels
 - gross margin and differentiation evidence
 
-Long descriptions, filled fields, product stage, or AI wording do **not** directly increase the product score.
+Analysis never creates validation evidence automatically.
 
-If evidence is weak, the product is shown as **Chưa đủ dữ liệu** instead of being given an authoritative-looking score.
+## Import a ChatGPT analysis file
 
-## AI boundary
+Use a JSON file with:
+
+```json
+{
+  "schema": "productpulse.analysis.v1"
+}
+```
+
+ProductPulse auto-detects this format, creates a product, renders its Analysis dashboard, and leaves Validation at **Chưa đủ dữ liệu** until real evidence is added.
+
+See:
+- [ANALYSIS_IMPORT_SCHEMA.md](./ANALYSIS_IMPORT_SCHEMA.md)
+- [example vintage frame file](./examples/vintage-memory-frame.productpulse.json)
+
+The same import control still accepts ProductPulse backup arrays.
+
+## AI boundary inside the app
 
 Gemini can suggest risks and validation actions. It cannot:
-- set or modify the evaluation score
-- invent TAM/SAM/SOM or market statistics
+- set or modify Validation Score
+- invent validation evidence
 - create fake reviews/testimonials
-- manufacture validation evidence
-
-## Local data
-
-Products are stored locally in the browser. v0.2.0 uses a new storage namespace and removes the old seeded-data namespace.
+- manufacture market statistics as facts
 
 ## Development
 
