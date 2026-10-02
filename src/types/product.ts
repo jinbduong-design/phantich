@@ -3,6 +3,7 @@ export type ProductCategory =
   | 'Công nghệ & IoT'
   | 'F&B & Ẩm thực'
   | 'Tiêu dùng & Thời trang'
+  | 'Quà tặng & Decor'
   | 'EdTech & Đào tạo'
   | 'Sức khỏe & Y tế'
   | 'Dịch vụ & Tài chính'
@@ -14,6 +15,55 @@ export type ProductStage =
   | 'Beta / Early Access'
   | 'Đã ra mắt thị trường'
   | 'Tăng trưởng mở rộng';
+
+export type AnalysisMetricBasis = 'observed' | 'inferred' | 'researched';
+
+export interface AnalysisMetric {
+  key: string;
+  label: string;
+  score: number;
+  confidence: number;
+  weight?: number;
+  rationale: string;
+  basis: AnalysisMetricBasis;
+}
+
+export interface AnalysisSource {
+  title: string;
+  url?: string;
+  type: 'image' | 'web' | 'user' | 'other';
+  note?: string;
+}
+
+export interface ProductAnalysis {
+  overallScore: number;
+  confidence: number;
+  summary: string;
+  metrics: AnalysisMetric[];
+  strengths: string[];
+  risks: string[];
+  assumptions: string[];
+  opportunities: string[];
+  nextTests: string[];
+  sources: AnalysisSource[];
+  generatedAt: string;
+  generatedBy?: string;
+}
+
+export interface ProductPulseAnalysisImport {
+  schema: 'productpulse.analysis.v1';
+  product: {
+    name: string;
+    tagline?: string;
+    category?: ProductCategory;
+    stage?: ProductStage;
+    pricingHypothesis?: string;
+    description: string;
+    targetCustomerHypothesis?: string;
+    competitorsHypothesis?: string;
+  };
+  analysis: ProductAnalysis;
+}
 
 export type DifferentiationProof =
   | 'none'
@@ -147,6 +197,7 @@ export interface Product {
   targetCustomerDescription: string;
   competitors: string;
   evidence: ProductEvidence;
+  analysis?: ProductAnalysis;
   createdAt: string;
   updatedAt: string;
   evaluation: ProductEvaluation;
