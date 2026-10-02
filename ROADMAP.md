@@ -36,26 +36,38 @@ No evidence means no authoritative score.
 - Imported assumptions, risks, opportunities, next tests and sources.
 - Analysis-first sorting and side-by-side Analysis/Validation comparison.
 
-## v0.4.0 — Validation Workspace
+## v0.4.0 — Commercial & Operations
+- Customer price segment and age range.
+- Domestic/international market scope and target markets.
+- Sales channels.
+- Self-production, outsourcing, import and hybrid operating models.
+- MOQ, supplier country and lead time.
+- Import/material/labor/packaging/other unit costs.
+- Selling price, platform fee, contribution margin and markup.
+- Completion/QC time, stock policy and step-by-step operating workflow.
+- Hypothesis / quote / actual basis labels.
+- Import these fields from ChatGPT analysis files.
+
+## v0.5.0 — Validation Workspace
 - Evidence log with source, date and attachment/link.
 - Interview records and tagged insights.
 - Experiment objects with hypothesis, metric, threshold and result.
 - Score history tied to evidence changes.
 - Validation task queue generated from the highest-uncertainty assumptions.
 
-## v0.5.0 — Economics & GTM
-- Revenue, COGS, gross margin, CAC, payback and repeat purchase.
+## v0.6.0 — Economics & GTM
+- Revenue, CAC, payback and repeat purchase.
 - Channel-level acquisition experiments.
 - Stage/category-specific configurable benchmarks.
 - Cohort/retention support where relevant.
 
-## v0.6.0 — Research
+## v0.7.0 — Research
 - Sourced competitor and market evidence.
 - Source URL, publication date and freshness.
 - Fact vs assumption vs AI hypothesis labeling.
 - Research notes reusable across products.
 
-## v0.7.0 — Decision System
+## v0.8.0 — Decision System
 - Evaluation snapshots.
 - Assumption register.
 - Experiment history.
