@@ -1,4 +1,10 @@
-import { EvaluationScores, Product, ProductEvaluation, TargetPersona } from '../types/product';
+import {
+  EvaluationConfidence,
+  EvaluationScores,
+  Product,
+  ProductEvaluation,
+  TargetPersona,
+} from '../types/product';
 
 export function calculateOverallScore(scores: EvaluationScores): number {
   const weighted =
@@ -7,6 +13,7 @@ export function calculateOverallScore(scores: EvaluationScores): number {
     scores.pricingAndValue * 0.20 +
     scores.competitiveMoat * 0.20 +
     scores.marketScalability * 0.15;
+
   return Math.round(weighted);
 }
 
@@ -18,7 +25,11 @@ export function calculateGrade(score: number): 'A+' | 'A' | 'B' | 'C' | 'D' {
   return 'D';
 }
 
-export function getGradeColor(grade: 'A+' | 'A' | 'B' | 'C' | 'D'): { text: string; bg: string; border: string } {
+export function getGradeColor(grade: 'A+' | 'A' | 'B' | 'C' | 'D'): {
+  text: string;
+  bg: string;
+  border: string;
+} {
   switch (grade) {
     case 'A+':
     case 'A':
@@ -33,182 +44,185 @@ export function getGradeColor(grade: 'A+' | 'A' | 'B' | 'C' | 'D'): { text: stri
   }
 }
 
+const hasValue = (value?: string) => Boolean(value && value.trim().length >= 3);
+
+export function buildEvaluationConfidence(
+  product: Pick<
+    Product,
+    'description' | 'targetCustomerDescription' | 'pricing' | 'competitors' | 'stage'
+  >,
+): EvaluationConfidence {
+  const knownSignals: string[] = [];
+  const unknowns: string[] = [];
+
+  if (hasValue(product.targetCustomerDescription)) {
+    knownSignals.push('Đã mô tả khách hàng mục tiêu');
+  } else {
+    unknowns.push('Khách hàng mục tiêu chưa đủ rõ');
+  }
+
+  if (hasValue(product.description)) {
+    knownSignals.push('Đã mô tả vấn đề và giải pháp');
+  } else {
+    unknowns.push('Vấn đề/giải pháp chưa có dữ liệu');
+  }
+
+  if (hasValue(product.pricing)) {
+    knownSignals.push('Đã có giả định về giá');
+  } else {
+    unknowns.push('Chưa có giả định hoặc kiểm chứng mức giá');
+  }
+
+  if (hasValue(product.competitors)) {
+    knownSignals.push('Đã xác định ít nhất một lựa chọn thay thế/đối thủ');
+  } else {
+    unknowns.push('Chưa xác định lựa chọn thay thế/đối thủ');
+  }
+
+  const maturityBonus =
+    product.stage === 'Tăng trưởng mở rộng'
+      ? 10
+      : product.stage === 'Đã ra mắt thị trường'
+        ? 8
+        : product.stage === 'Beta / Early Access'
+          ? 5
+          : product.stage === 'MVP thử nghiệm'
+            ? 3
+            : 0;
+
+  // Input completeness can support a medium-confidence baseline, but never
+  // high confidence by itself. Real customer/market evidence should be added
+  // in later validation versions.
+  const score = Math.min(74, 20 + knownSignals.length * 11 + maturityBonus);
+  const level: EvaluationConfidence['level'] =
+    score >= 80 ? 'Cao' : score >= 50 ? 'Trung bình' : 'Thấp';
+
+  return { score, level, knownSignals, unknowns };
+}
+
 export function generateDefaultEvaluation(
-  product: Pick<Product, 'name' | 'category' | 'stage' | 'pricing' | 'description' | 'targetCustomerDescription' | 'competitors'>
+  product: Pick<
+    Product,
+    | 'name'
+    | 'category'
+    | 'stage'
+    | 'pricing'
+    | 'description'
+    | 'targetCustomerDescription'
+    | 'competitors'
+  >,
 ): ProductEvaluation {
-  // Compute initial scores based on completeness and category traits
-  const descLen = (product.description || '').length;
-  const targetLen = (product.targetCustomerDescription || '').length;
-  const hasCompetitors = (product.competitors || '').trim().length > 0;
-  const hasPricing = (product.pricing || '').trim().length > 0;
+  const hasTarget = hasValue(product.targetCustomerDescription);
+  const hasDescription = hasValue(product.description);
+  const hasPricing = hasValue(product.pricing);
+  const hasCompetitors = hasValue(product.competitors);
 
-  const targetCustomerFit = Math.min(92, Math.max(65, 70 + Math.floor(targetLen / 15)));
-  const painPointSolvability = Math.min(94, Math.max(68, 72 + Math.floor(descLen / 30)));
-  const pricingAndValue = hasPricing ? 80 : 68;
-  const competitiveMoat = hasCompetitors ? 76 : 64;
-  const marketScalability = product.category === 'SaaS / B2B' ? 86 : 78;
-
+  // Conservative baseline: presence of text only establishes that an input
+  // exists. It does not prove demand, willingness to pay or defensibility.
   const scores: EvaluationScores = {
-    targetCustomerFit,
-    painPointSolvability,
-    pricingAndValue,
-    competitiveMoat,
-    marketScalability,
+    targetCustomerFit: hasTarget ? 58 : 36,
+    painPointSolvability: hasDescription ? 56 : 36,
+    pricingAndValue: hasPricing ? 52 : 34,
+    competitiveMoat: hasCompetitors ? 48 : 32,
+    marketScalability:
+      product.stage === 'Tăng trưởng mở rộng'
+        ? 62
+        : product.stage === 'Đã ra mắt thị trường'
+          ? 58
+          : product.category === 'SaaS / B2B'
+            ? 55
+            : 50,
   };
 
   const overallScore = calculateOverallScore(scores);
   const ratingGrade = calculateGrade(overallScore);
+  const confidence = buildEvaluationConfidence(product);
 
   const personas: TargetPersona[] = [
     {
       id: 'p-1',
-      name: 'Nguyễn Văn Minh - Quản lý Vận hành / Ra quyết định chính',
+      name: 'Người mua chính — cần xác minh',
       type: 'Primary',
       role: 'Decision Maker / Buyer',
-      demographics: '30 - 45 tuổi, quản lý tại các doanh nghiệp vừa và nhỏ hoặc nhóm cấp tiến, thu nhập trung bình khá trở lên.',
-      fitScore: 88,
-      painPoints: [
-        'Mất nhiều thời gian giải quyết quy trình thủ công hoặc công cụ rời rạc',
-        'Chi phí triển khai giải pháp hiện hành trên thị trường quá cao hoặc cồng kềnh',
-        'Thiếu công cụ chuẩn hóa giúp đồng bộ kết quả giữa các thành viên',
-      ],
-      goals: [
-        'Tối ưu 40% thời gian xử lý công việc lặp lại',
-        'Giảm thiểu tối đa lỗi phát sinh và chi phí ẩn',
-        'Có báo cáo trực quan để báo cáo cấp trên hoặc đối tác',
-      ],
-      buyingTriggers: [
-        'Được dùng thử (Free Trial/Demo) thấy hiệu quả tức thì',
-        'Được chuyên gia trong ngành hoặc đồng nghiệp đáng tin cậy giới thiệu',
-        'Chính sách giá rõ ràng, không chi phí phát sinh ẩn',
-      ],
-      objections: [
-        'Lo ngại đội ngũ mất nhiều thời gian để thích nghi và chuyển đổi',
-        'Đắn đo về tính bảo mật dữ liệu và độ bền vững lâu dài',
-      ],
-      willingnessToPay: 'Sẵn sàng chi trả mức giá đề xuất nếu chứng minh hoàn vốn ROI trong vòng 1-2 tháng.',
-      channels: ['LinkedIn', 'Cộng đồng Chuyên môn Facebook', 'Google Search', 'Hội thảo / Sự kiện ngành'],
+      demographics: product.targetCustomerDescription || 'Chưa có mô tả đủ rõ.',
+      fitScore: hasTarget ? 60 : 40,
+      painPoints: ['Giả định pain point hiện dựa trên mô tả đầu vào, chưa phải bằng chứng phỏng vấn.'],
+      goals: ['Xác định kết quả mà khách hàng thực sự sẵn sàng trả tiền để đạt được.'],
+      buyingTriggers: ['Bằng chứng giá trị rõ ràng', 'Rủi ro thử nghiệm thấp'],
+      objections: ['Chưa có bằng chứng đủ mạnh về nhu cầu và mức sẵn sàng chi trả.'],
+      willingnessToPay: 'Chưa xác minh. Cần pricing test hoặc phỏng vấn có cấu trúc.',
+      channels: ['Cần xác minh theo hành vi thật của phân khúc'],
     },
     {
       id: 'p-2',
-      name: 'Lê Thu Trang - Người thực thi trực tiếp',
+      name: 'Người dùng trực tiếp — cần xác minh',
       type: 'Secondary',
-      role: 'End User / Advocate',
-      demographics: '24 - 32 tuổi, chuyên viên thực hiện công việc hằng ngày, thành thạo công nghệ, coi trọng trải nghiệm mượt mà.',
-      fitScore: 82,
-      painPoints: [
-        'Giao diện các công cụ cũ phức tạp, nhiều thao tác thừa gây ức chế',
-        'Tốn thời gian tự mày mò xử lý khi gặp trục trặc',
-      ],
-      goals: [
-        'Hoàn thành công việc nhanh, giao diện thân thiện, dễ nhìn',
-        'Được hỗ trợ nhanh chóng khi có thắc mắc kỹ thuật',
-      ],
-      buyingTriggers: [
-        'Trải nghiệm UX tinh gọn, hiện đại, không cần đọc hướng dẫn dày cộp',
-        'Phím tắt hoặc luồng tự động giúp giải phóng sức lao động',
-      ],
-      objections: [
-        'Sợ phần mềm mới phát sinh thêm việc báo cáo ngoài luồng',
-      ],
-      willingnessToPay: 'Thúc đẩy sếp hoặc công ty cấp ngân sách mua gói chuyên nghiệp.',
-      channels: ['TikTok', 'YouTube Review', 'Nhóm Zalo / Telegram chuyên ngành'],
+      role: 'End User',
+      demographics: 'Chưa đủ dữ liệu để xác định chính xác.',
+      fitScore: 50,
+      painPoints: ['Cần xác minh workflow và mức độ đau hiện tại.'],
+      goals: ['Hoàn thành công việc nhanh hơn hoặc tốt hơn giải pháp hiện tại.'],
+      buyingTriggers: ['Trải nghiệm dễ hiểu', 'Kết quả thấy được sớm'],
+      objections: ['Chi phí chuyển đổi và thay đổi thói quen.'],
+      willingnessToPay: 'Chưa xác minh.',
+      channels: ['Cần nghiên cứu'],
     },
   ];
+
+  const namedCompetitor = product.competitors?.split(',')[0]?.trim();
 
   return {
     overallScore,
     ratingGrade,
-    verdict: `Sản phẩm "${product.name}" sở hữu định vị rõ ràng và giải quyết bài toán thực tế. Cần tiếp tục làm sắc nét sự khác biệt trước các giải pháp thay thế và tối ưu hóa phễu chuyển đổi cho tệp khách hàng mục tiêu tiên phong.`,
+    confidence,
+    verdict:
+      confidence.level === 'Thấp'
+        ? 'Đây mới là điểm baseline. Dữ liệu đầu vào chưa đủ để kết luận mạnh; ưu tiên xác minh khách hàng, mức giá và lựa chọn thay thế trước khi tăng điểm.'
+        : 'Điểm hiện tại phản ánh giả định có cấu trúc, chưa phải bằng chứng thị trường. Hãy dùng phần còn thiếu dữ liệu để chọn thử nghiệm tiếp theo.',
     scores,
     personas,
     swot: {
-      strengths: [
-        'Giải quyết trực diện bài toán nhức nhối với cách tiếp cận tinh gọn',
-        'Mô hình chi phí phù hợp, dễ tiếp cận hơn so với giải pháp lớn',
-        'Tốc độ triển khai và khả năng thích ứng linh hoạt với thị trường',
-      ],
-      weaknesses: [
-        'Thương hiệu còn mới, độ nhận diện chưa cao bằng các đối thủ lâu năm',
-        'Nguồn lực chăm sóc khách hàng và đào tạo cần được mở rộng thêm',
-        'Cần hoàn thiện thêm các tính năng tích hợp chuyên sâu',
-      ],
-      opportunities: [
-        'Thị trường ngách chưa có đối thủ thống trị tuyệt đối với trải nghiệm tốt',
-        'Xu hướng chuyển đổi số và nâng cấp tiêu dùng tăng mạnh tại Việt Nam & khu vực',
-        'Khả năng mở rộng bán chéo hoặc nâng cấp gói dịch vụ giá trị gia tăng',
-      ],
-      threats: [
-        'Đối thủ lớn có thể sao chép tính năng cốt lõi nếu không có rào cản độc quyền',
-        'Khách hàng có thể trì hoãn chi tiêu khi kinh tế biến động',
-      ],
+      strengths: ['Đã có khung giả định ban đầu để bắt đầu kiểm chứng.'],
+      weaknesses: ['Chưa có dữ liệu thực tế đủ mạnh để chứng minh nhu cầu, giá và lợi thế cạnh tranh.'],
+      opportunities: ['Có thể tăng nhanh độ tin cậy bằng phỏng vấn, landing test và pricing test.'],
+      threats: ['Đánh giá quá cao khi chưa có bằng chứng có thể dẫn tới đầu tư sai ưu tiên.'],
     },
     marketAnalysis: {
-      tamSamSom: 'TAM tiềm năng hàng triệu người dùng / doanh nghiệp tại Đông Nam Á. SOM mục tiêu chiếm 3-5% tệp khách hàng tiên phong trong 12 tháng đầu.',
-      marketDrivers: [
-        'Nhu cầu tự động hóa và nâng cao năng suất cá nhân / tổ chức ngày một khắt khe',
-        'Sự sẵn sàng chi trả cho các sản phẩm chuyên biệt, thiết kế trải nghiệm xuất sắc',
-      ],
-      adoptionBarriers: [
-        'Thói quen dùng giải pháp thủ công hoặc công cụ miễn phí có sẵn',
-        'Thời gian tìm hiểu và cam kết của người mua ban đầu',
-      ],
+      tamSamSom: 'Chưa đủ dữ liệu nguồn để ước tính TAM / SAM / SOM đáng tin cậy.',
+      marketDrivers: ['Cần bổ sung dữ liệu thị trường có nguồn và ngày cập nhật.'],
+      adoptionBarriers: ['Chưa xác minh rào cản chuyển đổi, ngân sách và hành vi mua.'],
     },
     competitorMatrix: [
       {
-        name: product.competitors ? product.competitors.split(',')[0].trim() : 'Các giải pháp truyền thống / Thủ công',
-        comparison: 'Chậm chạp, chi phí cao hoặc rời rạc; sản phẩm của bạn vượt trội về tốc độ và chi phí tối ưu.',
+        name: namedCompetitor || 'Lựa chọn thay thế hiện tại',
+        comparison: 'Chưa đủ bằng chứng để kết luận vượt trội. Cần so sánh theo giá, outcome, switching cost và kênh phân phối.',
         threatLevel: 'Trung bình',
-      },
-      {
-        name: 'Công cụ quốc tế phổ biến',
-        comparison: 'Nhiều tính năng nhưng thiếu sự thấu hiểu địa phương hóa và hỗ trợ trực tiếp.',
-        threatLevel: 'Cao',
       },
     ],
     recommendations: [
       {
-        area: 'Khách hàng mục tiêu',
-        action: 'Tập trung toàn lực vào phân khúc Primary Persona trong giai đoạn đầu để đạt Product-Market Fit vững chắc trước khi mở rộng.',
+        area: 'Khách hàng',
+        action: 'Phỏng vấn 5–10 người đúng phân khúc và ghi lại pain, workflow hiện tại, trigger mua và objection.',
         priority: 'Cao',
       },
       {
-        area: 'Định giá & Đóng gói',
-        action: 'Cung cấp gói dùng thử miễn phí hoặc bảo đảm hoàn tiền trong 14 ngày để gỡ bỏ rào cản tâm lý mua hàng ban đầu.',
+        area: 'Định giá',
+        action: 'Chạy pricing test hoặc hỏi willingness-to-pay theo khoảng giá thay vì chỉ hỏi “có mua không”.',
         priority: 'Cao',
       },
       {
-        area: 'Thông điệp truyền thông',
-        action: 'Tập trung truyền thông vào kết quả cụ thể (ví dụ: "Tiết kiệm 5 giờ/tuần") thay vì chỉ liệt kê tính năng kỹ thuật.',
-        priority: 'Trung bình',
-      },
-      {
-        area: 'Rào cản cạnh tranh',
-        action: 'Xây dựng cơ chế tích hợp dữ liệu hoặc cộng đồng người dùng trung thành để tạo hiệu ứng mạng lưới (Network Effect).',
+        area: 'Cạnh tranh',
+        action: 'So sánh ít nhất 3 lựa chọn thay thế theo outcome, giá, thời gian triển khai và switching cost.',
         priority: 'Trung bình',
       },
     ],
     simulatedReviews: [
       {
-        author: 'Trần Đăng Khoa',
-        persona: 'Tech Early Adopter',
-        rating: 5,
-        comment: 'Sản phẩm trực quan, giải quyết đúng cái mình cần hằng ngày mà không bị rườm rà. Đáng giá từng đồng.',
-        sentiment: 'Tích cực',
-      },
-      {
-        author: 'Nguyễn Thị Bích Ngọc',
-        persona: 'Quản lý Tài chính',
-        rating: 4,
-        comment: 'Rất tiềm năng! Nếu bổ sung thêm tính năng xuất báo cáo chuyên sâu và tích hợp linh hoạt hơn thì xuất sắc.',
+        author: 'Giả lập',
+        persona: 'Khách hàng mục tiêu',
+        rating: 3,
+        comment: 'Đây là phản hồi giả định để kiểm tra câu hỏi nghiên cứu, không được xem là review thật.',
         sentiment: 'Trung lập',
-      },
-      {
-        author: 'Phạm Đức Huy',
-        persona: 'Người dùng phổ thông',
-        rating: 4,
-        comment: 'Giao diện mượt mà, hỗ trợ nhiệt tình. Hy vọng mức giá duy trì ổn định không tăng quá nhanh sau đợt ra mắt.',
-        sentiment: 'Tích cực',
       },
     ],
     lastEvaluatedAt: new Date().toLocaleDateString('vi-VN'),
