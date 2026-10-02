@@ -27,8 +27,6 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
   product,
   onApplyAnalysis,
 }) => {
-  if (!isOpen || !product) return null;
-
   const [status, setStatus] = useState<'idle' | 'running' | 'success' | 'error'>('idle');
   const [currentStep, setCurrentStep] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
@@ -43,6 +41,8 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
   ];
 
   const runAnalysis = async () => {
+    if (!product) return;
+
     setStatus('running');
     setCurrentStep(0);
     setErrorMessage('');
@@ -169,6 +169,7 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
   };
 
   const handleApplyFallback = () => {
+    if (!product) return;
     onApplyAnalysis(generateDefaultEvaluation(product));
     onClose();
   };
@@ -179,8 +180,10 @@ export const AiAnalysisModal: React.FC<AiAnalysisModalProps> = ({
   };
 
   useEffect(() => {
-    if (isOpen) runAnalysis();
-  }, [isOpen, product.id]);
+    if (isOpen && product) runAnalysis();
+  }, [isOpen, product?.id]);
+
+  if (!isOpen || !product) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 p-3 backdrop-blur-xs sm:p-4">
